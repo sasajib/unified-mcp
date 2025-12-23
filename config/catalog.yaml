@@ -1,0 +1,80 @@
+# Unified MCP Server - Capability Catalog
+# Defines all available capabilities and their configurations
+
+capabilities:
+
+  code_understanding:
+    enabled: true
+    type: codanna
+    source: capabilities/codanna
+    tools:
+      - search_code
+      - get_call_graph
+      - find_symbol
+      - find_implementations
+    lazy_load: true
+    description: "Semantic code search, call graphs, and symbol lookup using Codanna"
+
+  documentation:
+    enabled: true
+    type: context7
+    source: capabilities/context7
+    tools:
+      - resolve_library_id
+      - get_library_docs
+    lazy_load: true
+    description: "Up-to-date library documentation from Context7"
+
+  browser_automation:
+    enabled: true
+    type: playwright
+    source: capabilities/playwright-mcp
+    tools:
+      - playwright_navigate
+      - playwright_screenshot
+      - playwright_click
+      - playwright_fill
+      - playwright_select
+      - playwright_evaluate
+      - playwright_get_text
+      - playwright_hover
+    lazy_load: true
+    description: "Browser automation for testing web applications using Playwright"
+
+  memory_search:
+    enabled: true
+    type: claude-mem
+    source: capabilities/claude-mem
+    api_url: "http://localhost:37777"
+    tools:
+      - mem_search
+      - mem_get_observation
+      - mem_recent_context
+      - mem_timeline
+    lazy_load: true
+    description: "Progressive disclosure memory with auto-capture from Claude-mem"
+
+  knowledge_graph:
+    enabled: true
+    type: graphiti_ladybug
+    source: capabilities/graphiti_ladybug
+    tools:
+      - store_insight
+      - search_insights
+      - query_graph
+      - add_episode
+    lazy_load: false  # Always available for cross-session memory
+    description: "Knowledge graph memory using Graphiti + LadybugDB (embedded, no Docker)"
+
+# Progressive Discovery Settings
+discovery:
+  mode: progressive  # Options: 'progressive' or 'static'
+  search_only_tokens: 50  # Token cost for search results preview
+  describe_only_tokens: 200  # Token cost per tool schema
+  max_tools_in_context: 10  # Maximum tools to show in search results
+  enable_token_estimates: true  # Show token cost estimates
+
+# Logging
+logging:
+  level: INFO  # DEBUG, INFO, WARNING, ERROR
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
