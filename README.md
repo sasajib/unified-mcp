@@ -23,28 +23,20 @@ cd unified-mcp
 uv pip install -r requirements.txt
 
 # 3. Add to Claude Code (replace /path/to/unified-mcp with actual path)
-claude mcp add unified-mcp \
-  --command uvx \
-  --arg "--directory" \
-  --arg "/absolute/path/to/unified-mcp" \
-  --arg "-p" \
-  --arg "3.12" \
-  --arg "server.py"
+claude mcp add --transport stdio \
+  unified-mcp \
+  -- uvx --directory /absolute/path/to/unified-mcp -p 3.12 server.py
 
 # 4. For Graphiti + Google Gemini support (optional)
-claude mcp add unified-mcp \
-  --command uvx \
-  --arg "--directory" \
-  --arg "/absolute/path/to/unified-mcp" \
-  --arg "-p" \
-  --arg "3.12" \
-  --arg "server.py" \
+claude mcp add --transport stdio \
   --env GRAPHITI_ENABLED=true \
   --env GRAPHITI_LLM_PROVIDER=google_ai \
   --env GRAPHITI_EMBEDDER_PROVIDER=google_ai \
   --env GOOGLE_API_KEY=your-gemini-api-key-here \
   --env GRAPHITI_LLM_MODEL=gemini-1.5-pro \
-  --env GRAPHITI_EMBEDDER_MODEL=text-embedding-004
+  --env GRAPHITI_EMBEDDER_MODEL=text-embedding-004 \
+  unified-mcp \
+  -- uvx --directory /absolute/path/to/unified-mcp -p 3.12 server.py
 
 # 5. Restart Claude Code and verify
 # Ask Claude: "What tools do you have available?"
@@ -126,93 +118,67 @@ Replace `/absolute/path/to/unified-mcp` with your actual installation path.
 
 **Basic Configuration (No Graphiti):**
 ```bash
-claude mcp add unified-mcp \
-  --command uvx \
-  --arg "--directory" \
-  --arg "/absolute/path/to/unified-mcp" \
-  --arg "-p" \
-  --arg "3.12" \
-  --arg "server.py"
+claude mcp add --transport stdio \
+  unified-mcp \
+  -- uvx --directory /absolute/path/to/unified-mcp -p 3.12 server.py
 ```
 
 **With Graphiti + Google Gemini:**
 ```bash
-claude mcp add unified-mcp \
-  --command uvx \
-  --arg "--directory" \
-  --arg "/absolute/path/to/unified-mcp" \
-  --arg "-p" \
-  --arg "3.12" \
-  --arg "server.py" \
+claude mcp add --transport stdio \
   --env GRAPHITI_ENABLED=true \
   --env GRAPHITI_LLM_PROVIDER=google_ai \
   --env GRAPHITI_EMBEDDER_PROVIDER=google_ai \
   --env GOOGLE_API_KEY=your-gemini-api-key-here \
   --env GRAPHITI_LLM_MODEL=gemini-1.5-pro \
-  --env GRAPHITI_EMBEDDER_MODEL=text-embedding-004
+  --env GRAPHITI_EMBEDDER_MODEL=text-embedding-004 \
+  unified-mcp \
+  -- uvx --directory /absolute/path/to/unified-mcp -p 3.12 server.py
 ```
 
 **With Graphiti + OpenAI:**
 ```bash
-claude mcp add unified-mcp \
-  --command uvx \
-  --arg "--directory" \
-  --arg "/absolute/path/to/unified-mcp" \
-  --arg "-p" \
-  --arg "3.12" \
-  --arg "server.py" \
+claude mcp add --transport stdio \
   --env GRAPHITI_ENABLED=true \
   --env GRAPHITI_LLM_PROVIDER=openai \
   --env GRAPHITI_EMBEDDER_PROVIDER=openai \
   --env OPENAI_API_KEY=sk-your-openai-key-here \
   --env GRAPHITI_LLM_MODEL=gpt-4o \
-  --env GRAPHITI_EMBEDDER_MODEL=text-embedding-3-small
+  --env GRAPHITI_EMBEDDER_MODEL=text-embedding-3-small \
+  unified-mcp \
+  -- uvx --directory /absolute/path/to/unified-mcp -p 3.12 server.py
 ```
 
 **With Graphiti + Anthropic Claude + Voyage Embeddings:**
 ```bash
-claude mcp add unified-mcp \
-  --command uvx \
-  --arg "--directory" \
-  --arg "/absolute/path/to/unified-mcp" \
-  --arg "-p" \
-  --arg "3.12" \
-  --arg "server.py" \
+claude mcp add --transport stdio \
   --env GRAPHITI_ENABLED=true \
   --env GRAPHITI_LLM_PROVIDER=anthropic \
   --env GRAPHITI_EMBEDDER_PROVIDER=voyage_ai \
   --env ANTHROPIC_API_KEY=sk-ant-your-key-here \
   --env VOYAGE_API_KEY=pa-your-voyage-key-here \
   --env GRAPHITI_LLM_MODEL=claude-3-5-sonnet-20241022 \
-  --env GRAPHITI_EMBEDDER_MODEL=voyage-3
+  --env GRAPHITI_EMBEDDER_MODEL=voyage-3 \
+  unified-mcp \
+  -- uvx --directory /absolute/path/to/unified-mcp -p 3.12 server.py
 ```
 
 **With Graphiti + Local Ollama (Free):**
 ```bash
-claude mcp add unified-mcp \
-  --command uvx \
-  --arg "--directory" \
-  --arg "/absolute/path/to/unified-mcp" \
-  --arg "-p" \
-  --arg "3.12" \
-  --arg "server.py" \
+claude mcp add --transport stdio \
   --env GRAPHITI_ENABLED=true \
   --env GRAPHITI_LLM_PROVIDER=ollama \
   --env GRAPHITI_EMBEDDER_PROVIDER=ollama \
   --env OLLAMA_BASE_URL=http://localhost:11434 \
   --env GRAPHITI_LLM_MODEL=llama3.1 \
-  --env GRAPHITI_EMBEDDER_MODEL=nomic-embed-text
+  --env GRAPHITI_EMBEDDER_MODEL=nomic-embed-text \
+  unified-mcp \
+  -- uvx --directory /absolute/path/to/unified-mcp -p 3.12 server.py
 ```
 
 **Full Configuration Example (All Options):**
 ```bash
-claude mcp add unified-mcp \
-  --command uvx \
-  --arg "--directory" \
-  --arg "/absolute/path/to/unified-mcp" \
-  --arg "-p" \
-  --arg "3.12" \
-  --arg "server.py" \
+claude mcp add --transport stdio \
   --env CODANNA_INDEX_DIR=.codanna \
   --env CLAUDE_MEM_API_URL=http://localhost:37777 \
   --env GRAPHITI_ENABLED=true \
@@ -221,7 +187,9 @@ claude mcp add unified-mcp \
   --env GOOGLE_API_KEY=your-gemini-api-key-here \
   --env GRAPHITI_LLM_MODEL=gemini-1.5-pro \
   --env GRAPHITI_EMBEDDER_MODEL=text-embedding-004 \
-  --env GRAPHITI_DB_PATH=.graphiti/ladybug.db
+  --env GRAPHITI_DB_PATH=.graphiti/ladybug.db \
+  unified-mcp \
+  -- uvx --directory /absolute/path/to/unified-mcp -p 3.12 server.py
 ```
 
 **Option 2: Manual Configuration**
