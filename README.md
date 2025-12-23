@@ -28,14 +28,13 @@ claude mcp add --transport stdio \
   -- uvx --directory /absolute/path/to/unified-mcp -p 3.12 server.py
 
 # 4. For Graphiti + Google Gemini support (optional)
-claude mcp add --transport stdio \
+claude mcp add --transport stdio unified-mcp \
   -e GRAPHITI_ENABLED=true \
   -e GRAPHITI_LLM_PROVIDER=google_ai \
   -e GRAPHITI_EMBEDDER_PROVIDER=google_ai \
   -e GOOGLE_API_KEY=your-gemini-api-key-here \
   -e GRAPHITI_LLM_MODEL=gemini-1.5-pro \
   -e GRAPHITI_EMBEDDER_MODEL=text-embedding-004 \
-  unified-mcp \
   -- uvx --directory /absolute/path/to/unified-mcp -p 3.12 server.py
 
 # 5. Restart Claude Code and verify
@@ -125,33 +124,31 @@ claude mcp add --transport stdio \
 
 **With Graphiti + Google Gemini:**
 ```bash
-claude mcp add --transport stdio \
+claude mcp add --transport stdio unified-mcp \
   -e GRAPHITI_ENABLED=true \
   -e GRAPHITI_LLM_PROVIDER=google_ai \
   -e GRAPHITI_EMBEDDER_PROVIDER=google_ai \
   -e GOOGLE_API_KEY=your-gemini-api-key-here \
   -e GRAPHITI_LLM_MODEL=gemini-1.5-pro \
   -e GRAPHITI_EMBEDDER_MODEL=text-embedding-004 \
-  unified-mcp \
   -- uvx --directory /absolute/path/to/unified-mcp -p 3.12 server.py
 ```
 
 **With Graphiti + OpenAI:**
 ```bash
-claude mcp add --transport stdio \
+claude mcp add --transport stdio unified-mcp \
   -e GRAPHITI_ENABLED=true \
   -e GRAPHITI_LLM_PROVIDER=openai \
   -e GRAPHITI_EMBEDDER_PROVIDER=openai \
   -e OPENAI_API_KEY=sk-your-openai-key-here \
   -e GRAPHITI_LLM_MODEL=gpt-4o \
   -e GRAPHITI_EMBEDDER_MODEL=text-embedding-3-small \
-  unified-mcp \
   -- uvx --directory /absolute/path/to/unified-mcp -p 3.12 server.py
 ```
 
 **With Graphiti + Anthropic Claude + Voyage Embeddings:**
 ```bash
-claude mcp add --transport stdio \
+claude mcp add --transport stdio unified-mcp \
   -e GRAPHITI_ENABLED=true \
   -e GRAPHITI_LLM_PROVIDER=anthropic \
   -e GRAPHITI_EMBEDDER_PROVIDER=voyage_ai \
@@ -159,26 +156,24 @@ claude mcp add --transport stdio \
   -e VOYAGE_API_KEY=pa-your-voyage-key-here \
   -e GRAPHITI_LLM_MODEL=claude-3-5-sonnet-20241022 \
   -e GRAPHITI_EMBEDDER_MODEL=voyage-3 \
-  unified-mcp \
   -- uvx --directory /absolute/path/to/unified-mcp -p 3.12 server.py
 ```
 
 **With Graphiti + Local Ollama (Free):**
 ```bash
-claude mcp add --transport stdio \
+claude mcp add --transport stdio unified-mcp \
   -e GRAPHITI_ENABLED=true \
   -e GRAPHITI_LLM_PROVIDER=ollama \
   -e GRAPHITI_EMBEDDER_PROVIDER=ollama \
   -e OLLAMA_BASE_URL=http://localhost:11434 \
   -e GRAPHITI_LLM_MODEL=llama3.1 \
   -e GRAPHITI_EMBEDDER_MODEL=nomic-embed-text \
-  unified-mcp \
   -- uvx --directory /absolute/path/to/unified-mcp -p 3.12 server.py
 ```
 
 **Full Configuration Example (All Options):**
 ```bash
-claude mcp add --transport stdio \
+claude mcp add --transport stdio unified-mcp \
   -e CODANNA_INDEX_DIR=.codanna \
   -e CLAUDE_MEM_API_URL=http://localhost:37777 \
   -e GRAPHITI_ENABLED=true \
@@ -188,7 +183,6 @@ claude mcp add --transport stdio \
   -e GRAPHITI_LLM_MODEL=gemini-1.5-pro \
   -e GRAPHITI_EMBEDDER_MODEL=text-embedding-004 \
   -e GRAPHITI_DB_PATH=.graphiti/ladybug.db \
-  unified-mcp \
   -- uvx --directory /absolute/path/to/unified-mcp -p 3.12 server.py
 ```
 
