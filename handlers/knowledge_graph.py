@@ -13,13 +13,11 @@ Maps unified-mcp tools to Graphiti operations:
 LadybugDB provides embedded graph database (no Docker required).
 """
 
-import asyncio
-import json
 import logging
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from graphiti_core import Graphiti
 from graphiti_core.driver.driver import GraphDriver, GraphDriverSession, GraphProvider

@@ -11,11 +11,7 @@ Maps unified-mcp tools to Claude-mem's API endpoints:
 - mem_timeline → /api/timeline (timeline view)
 """
 
-import asyncio
-import json
-import logging
-from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Optional
 
 import httpx
 

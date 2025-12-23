@@ -15,7 +15,7 @@ import asyncio
 import json
 import shutil
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import List, Optional
 
 from core.capability_loader import CapabilityHandler
 

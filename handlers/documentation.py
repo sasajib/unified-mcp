@@ -11,10 +11,8 @@ Maps unified-mcp tools to Context7's MCP tools:
 
 import asyncio
 import json
-import logging
 import shutil
-from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from core.capability_loader import CapabilityHandler
 
