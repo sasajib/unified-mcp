@@ -7,3 +7,6 @@
 [submodule "capabilities/playwright-mcp"]
 	path = capabilities/playwright-mcp
 	url = https://github.com/microsoft/playwright-mcp.git
+[submodule "capabilities/claude-mem"]
+	path = capabilities/claude-mem
+	url = https://github.com/thedotmack/claude-mem.git
