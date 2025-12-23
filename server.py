@@ -35,8 +35,16 @@ try:
     env_path = Path(__file__).parent / ".env"
     if env_path.exists():
         load_dotenv(env_path)
-except ImportError:
-    pass  # dotenv not installed, skip
+        # Verify it loaded
+        import sys
+        print(f"[STARTUP] .env file loaded from: {env_path}", file=sys.stderr)
+        print(f"[STARTUP] GRAPHITI_LLM_PROVIDER: {os.getenv('GRAPHITI_LLM_PROVIDER')}", file=sys.stderr)
+    else:
+        import sys
+        print(f"[STARTUP] .env file not found at: {env_path}", file=sys.stderr)
+except ImportError as e:
+    import sys
+    print(f"[STARTUP] dotenv not available: {e}", file=sys.stderr)
 
 # Configure logging
 logging.basicConfig(
