@@ -223,7 +223,10 @@ class CodannaHandler(CapabilityHandler):
                         },
                         "lang": {
                             "type": "string",
-                            "description": "Filter by language (e.g., 'rust', 'typescript', 'python')",
+                            "description": (
+                                "Filter by language "
+                                "(e.g., 'rust', 'typescript', 'python')"
+                            ),
                         },
                     },
                     "required": ["query"],
@@ -258,8 +261,8 @@ class CodannaHandler(CapabilityHandler):
                 "name": "find_symbol",
                 "description": (
                     "Find a symbol by exact name. "
-                    "Returns symbol information including file path, line number, kind, and signature. "
-                    "Sub-10ms lookup."
+                    "Returns symbol information including file path, "
+                    "line number, kind, and signature. Sub-10ms lookup."
                 ),
                 "input_schema": {
                     "type": "object",
@@ -287,7 +290,10 @@ class CodannaHandler(CapabilityHandler):
                         },
                         "kind": {
                             "type": "string",
-                            "description": "Filter by kind: Function, Struct, Class, Interface, Trait, etc.",
+                            "description": (
+                                "Filter by kind: Function, Struct, "
+                                "Class, Interface, Trait, etc."
+                            ),
                         },
                         "limit": {
                             "type": "integer",

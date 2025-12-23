@@ -296,11 +296,15 @@ class GraphitiHandler(CapabilityHandler):
 
         # Debug logging
         self.logger.info(
-            f"Environment: GRAPHITI_LLM_PROVIDER={llm_provider}, GRAPHITI_EMBEDDER_PROVIDER={embedder_provider}"
+            f"Environment: GRAPHITI_LLM_PROVIDER={llm_provider}, "
+            f"GRAPHITI_EMBEDDER_PROVIDER={embedder_provider}"
         )
         self.logger.info(f"Models: LLM={llm_model}, Embedder={embedder_model}")
+        google_key_status = 'set' if os.getenv('GOOGLE_API_KEY') else 'not set'
+        openai_key_status = 'set' if os.getenv('OPENAI_API_KEY') else 'not set'
         self.logger.info(
-            f"API Keys: GOOGLE_API_KEY={'set' if os.getenv('GOOGLE_API_KEY') else 'not set'}, OPENAI_API_KEY={'set' if os.getenv('OPENAI_API_KEY') else 'not set'}"
+            f"API Keys: GOOGLE_API_KEY={google_key_status}, "
+            f"OPENAI_API_KEY={openai_key_status}"
         )
 
         # Create LLM client based on provider
@@ -446,7 +450,10 @@ class GraphitiHandler(CapabilityHandler):
                         },
                         "source": {
                             "type": "string",
-                            "description": "Source description (e.g., 'user conversation', 'documentation')",
+                            "description": (
+                                "Source description "
+                                "(e.g., 'user conversation', 'documentation')"
+                            ),
                             "default": "user input",
                         },
                     },

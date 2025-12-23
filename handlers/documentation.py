@@ -52,7 +52,10 @@ class Context7Handler(CapabilityHandler):
                     "properties": {
                         "libraryName": {
                             "type": "string",
-                            "description": "Library name to search for (e.g., 'react', 'next.js', 'supabase')",
+                            "description": (
+                                "Library name to search for "
+                                "(e.g., 'react', 'next.js', 'supabase')"
+                            ),
                         }
                     },
                     "required": ["libraryName"],
@@ -61,8 +64,9 @@ class Context7Handler(CapabilityHandler):
             "get_library_docs": {
                 "name": "get_library_docs",
                 "description": (
-                    "Fetch up-to-date documentation for a library using Context7-compatible library ID. "
-                    "Returns version-specific code examples and API documentation."
+                    "Fetch up-to-date documentation for a library using "
+                    "Context7-compatible library ID. Returns version-specific "
+                    "code examples and API documentation."
                 ),
                 "input_schema": {
                     "type": "object",
@@ -70,13 +74,18 @@ class Context7Handler(CapabilityHandler):
                         "context7CompatibleLibraryID": {
                             "type": "string",
                             "description": (
-                                "Exact Context7-compatible library ID (e.g., '/mongodb/docs', '/vercel/next.js', "
-                                "'/supabase/supabase'). Use resolve_library_id first to find this ID."
+                                "Exact Context7-compatible library ID "
+                                "(e.g., '/mongodb/docs', '/vercel/next.js', "
+                                "'/supabase/supabase'). Use resolve_library_id "
+                                "first to find this ID."
                             ),
                         },
                         "topic": {
                             "type": "string",
-                            "description": "Optional topic to focus docs on (e.g., 'routing', 'hooks', 'authentication')",
+                            "description": (
+                                "Optional topic to focus docs on "
+                                "(e.g., 'routing', 'hooks', 'authentication')"
+                            ),
                         },
                         "page": {
                             "type": "integer",
