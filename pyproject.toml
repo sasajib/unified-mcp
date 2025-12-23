@@ -57,3 +57,11 @@ omit = ["tests/*", "examples/*"]
 precision = 2
 show_missing = true
 skip_covered = false
+
+[tool.isort]
+profile = "black"
+line_length = 88
+
+[tool.black]
+line-length = 88
+target-version = ['py312']
