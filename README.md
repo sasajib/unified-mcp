@@ -101,6 +101,25 @@ cd ../playwright-mcp && npm install
 cd ../claude-mem && npm install
 ```
 
+**Codanna Auto-Indexing:**
+
+The server automatically creates and manages Codanna indexes:
+- ✅ **Automatic indexing** on first run (indexes `src`, `lib`, `handlers`, `core` directories)
+- ✅ **No manual setup required** - just install Codanna and start the server
+- 🔄 **Optional file watching** - enable `watch_changes: true` in `config/catalog.yaml` to auto-reindex on file changes
+
+To customize auto-indexing, edit `config/catalog.yaml`:
+
+```yaml
+code_understanding:
+  auto_index: true  # Auto-create index if missing
+  watch_changes: false  # Watch files and re-index (requires watchdog)
+  index_dirs:  # Directories to index
+    - src
+    - lib
+    - your-custom-dir
+```
+
 ## Usage
 
 ### Start Server

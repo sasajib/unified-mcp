@@ -29,6 +29,9 @@ class CodannaHandler(CapabilityHandler):
         super().__init__(config)
         self.codanna_path: Optional[str] = None
         self.project_root: Path = Path.cwd()
+        self.auto_index: bool = config.get("auto_index", True)  # Auto-index by default
+        self.watch_changes: bool = config.get("watch_changes", False)  # Watch disabled by default
+        self.index_dirs: List[str] = config.get("index_dirs", ["src", "lib", "."])  # Directories to index
 
     async def initialize(self) -> None:
         """Initialize Codanna - verify installation and check index."""
@@ -44,12 +47,125 @@ class CodannaHandler(CapabilityHandler):
         # Check if index exists in current project
         index_path = self.project_root / ".codanna" / "index"
         if not index_path.exists():
-            self.logger.warning(
-                f"Codanna index not found at {index_path}. "
-                "Run 'codanna init && codanna index src --progress' to create index."
-            )
+            if self.auto_index:
+                self.logger.info(f"Codanna index not found at {index_path}. Auto-indexing...")
+                await self._auto_index()
+            else:
+                self.logger.warning(
+                    f"Codanna index not found at {index_path}. "
+                    "Run 'codanna init && codanna index src --progress' to create index, "
+                    "or enable auto_index in config."
+                )
         else:
             self.logger.info(f"Codanna index found at {index_path}")
+
+        # Start file watcher if enabled
+        if self.watch_changes and index_path.exists():
+            self.logger.info("Starting file watcher for automatic re-indexing...")
+            asyncio.create_task(self._watch_and_reindex())
+
+    async def _auto_index(self) -> None:
+        """Automatically initialize and index the codebase."""
+        try:
+            # Run codanna init
+            self.logger.info("Running: codanna init")
+            init_proc = await asyncio.create_subprocess_exec(
+                self.codanna_path,
+                "init",
+                cwd=self.project_root,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            stdout, stderr = await init_proc.wait()
+
+            if init_proc.returncode != 0:
+                self.logger.error(f"codanna init failed: {stderr}")
+                return
+
+            # Find directories to index
+            dirs_to_index = []
+            for dir_name in self.index_dirs:
+                dir_path = self.project_root / dir_name
+                if dir_path.exists() and dir_path.is_dir():
+                    dirs_to_index.append(dir_name)
+
+            if not dirs_to_index:
+                self.logger.warning("No source directories found to index")
+                return
+
+            # Run codanna index on discovered directories
+            self.logger.info(f"Indexing directories: {', '.join(dirs_to_index)}")
+            for dir_name in dirs_to_index:
+                self.logger.info(f"Running: codanna index {dir_name}")
+                index_proc = await asyncio.create_subprocess_exec(
+                    self.codanna_path,
+                    "index",
+                    dir_name,
+                    cwd=self.project_root,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                await index_proc.wait()
+
+                if index_proc.returncode == 0:
+                    self.logger.info(f"✓ Indexed {dir_name}")
+                else:
+                    self.logger.warning(f"Failed to index {dir_name}")
+
+            self.logger.info("✓ Auto-indexing completed")
+
+        except Exception as e:
+            self.logger.error(f"Auto-indexing failed: {e}")
+
+    async def _watch_and_reindex(self) -> None:
+        """Watch for file changes and re-index automatically."""
+        try:
+            import watchdog.observers
+            import watchdog.events
+
+            class CodeChangeHandler(watchdog.events.FileSystemEventHandler):
+                def __init__(self, handler):
+                    self.handler = handler
+                    self.last_reindex = 0
+                    self.reindex_delay = 5  # seconds
+
+                def on_modified(self, event):
+                    if event.is_directory:
+                        return
+
+                    # Only reindex for code files
+                    if not any(event.src_path.endswith(ext) for ext in
+                              ['.py', '.js', '.ts', '.jsx', '.tsx', '.rs', '.go', '.java', '.cpp', '.c', '.h']):
+                        return
+
+                    # Debounce re-indexing
+                    import time
+                    now = time.time()
+                    if now - self.last_reindex < self.reindex_delay:
+                        return
+
+                    self.last_reindex = now
+                    self.handler.logger.info(f"File changed: {event.src_path}. Re-indexing...")
+                    asyncio.create_task(self.handler._auto_index())
+
+            event_handler = CodeChangeHandler(self)
+            observer = watchdog.observers.Observer()
+
+            for dir_name in self.index_dirs:
+                dir_path = self.project_root / dir_name
+                if dir_path.exists():
+                    observer.schedule(event_handler, str(dir_path), recursive=True)
+
+            observer.start()
+            self.logger.info("File watcher started")
+
+        except ImportError:
+            self.logger.warning(
+                "watchdog package not installed. File watching disabled. "
+                "Install with: pip install watchdog"
+            )
+        except Exception as e:
+            self.logger.error(f"Failed to start file watcher: {e}")
 
     async def get_tool_schema(self, tool_name: str) -> dict:
         """Get JSON schema for a tool."""

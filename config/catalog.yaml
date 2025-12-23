@@ -7,6 +7,14 @@ capabilities:
     enabled: true
     type: codanna
     source: capabilities/codanna
+    auto_index: true  # Automatically create index if missing
+    watch_changes: false  # Watch files and re-index on changes (requires watchdog)
+    index_dirs:  # Directories to index (in order of preference)
+      - src
+      - lib
+      - handlers
+      - core
+      - .
     tools:
       - search_code
       - get_call_graph

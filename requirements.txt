@@ -8,3 +8,6 @@ python-dotenv>=1.0.0
 # Requires Python 3.12+
 real_ladybug>=0.13.0
 graphiti-core>=0.5.0
+
+# Optional: File watching for auto-reindexing (Codanna)
+watchdog>=3.0.0
