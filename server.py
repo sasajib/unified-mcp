@@ -19,6 +19,7 @@ Configuration:
 
 import asyncio
 import logging
+import os
 import sys
 from pathlib import Path
 
@@ -34,6 +35,17 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
+
+# Log environment variables for Graphiti
+logger.info("=== Environment Variables ===")
+logger.info(f"GRAPHITI_ENABLED: {os.getenv('GRAPHITI_ENABLED', 'not set')}")
+logger.info(f"GRAPHITI_LLM_PROVIDER: {os.getenv('GRAPHITI_LLM_PROVIDER', 'not set')}")
+logger.info(f"GRAPHITI_EMBEDDER_PROVIDER: {os.getenv('GRAPHITI_EMBEDDER_PROVIDER', 'not set')}")
+logger.info(f"GRAPHITI_LLM_MODEL: {os.getenv('GRAPHITI_LLM_MODEL', 'not set')}")
+logger.info(f"GRAPHITI_EMBEDDER_MODEL: {os.getenv('GRAPHITI_EMBEDDER_MODEL', 'not set')}")
+logger.info(f"GOOGLE_API_KEY: {'SET' if os.getenv('GOOGLE_API_KEY') else 'NOT SET'}")
+logger.info(f"OPENAI_API_KEY: {'SET' if os.getenv('OPENAI_API_KEY') else 'NOT SET'}")
+logger.info("============================")
 
 # Create MCP server
 app = Server("unified-dynamic-mcp")
