@@ -45,6 +45,116 @@ logger.info(f"Unified MCP Server initialized with {len(registry.capabilities)} c
 
 
 # ============================================================================
+# MCP PROTOCOL HANDLERS
+# ============================================================================
+
+
+@app.list_tools()
+async def list_tools() -> list:
+    """List all available tools for MCP protocol."""
+    logger.info("list_tools (MCP protocol) called")
+
+    return [
+        {
+            "name": "search_tools",
+            "description": "Search for relevant tools using natural language query. Returns lightweight previews (~50 tokens for 10 tools).",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "Natural language search query (e.g., 'code search', 'authentication')"
+                    },
+                    "max_results": {
+                        "type": "integer",
+                        "description": "Maximum number of results to return",
+                        "default": 10
+                    }
+                },
+                "required": ["query"]
+            }
+        },
+        {
+            "name": "describe_tools",
+            "description": "Get full schemas for specific tools. Returns detailed schemas (~200 tokens per tool).",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "tool_names": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "List of tool names to describe"
+                    }
+                },
+                "required": ["tool_names"]
+            }
+        },
+        {
+            "name": "execute_tool",
+            "description": "Execute a specific tool with given arguments.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "tool_name": {
+                        "type": "string",
+                        "description": "Name of the tool to execute"
+                    },
+                    "arguments": {
+                        "type": "object",
+                        "description": "Tool arguments as key-value pairs"
+                    }
+                },
+                "required": ["tool_name", "arguments"]
+            }
+        },
+        {
+            "name": "list_capabilities",
+            "description": "List all available capabilities and their status.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {}
+            }
+        },
+        {
+            "name": "enable_capability",
+            "description": "Dynamically enable a capability at runtime.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "capability_name": {
+                        "type": "string",
+                        "description": "Name of capability to enable"
+                    }
+                },
+                "required": ["capability_name"]
+            }
+        },
+        {
+            "name": "disable_capability",
+            "description": "Dynamically disable a capability at runtime.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "capability_name": {
+                        "type": "string",
+                        "description": "Name of capability to disable"
+                    }
+                },
+                "required": ["capability_name"]
+            }
+        },
+        {
+            "name": "get_server_info",
+            "description": "Get information about the unified MCP server.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {}
+            }
+        }
+    ]
+
+
+# ============================================================================
 # PROGRESSIVE DISCOVERY TOOLS (Core Interface)
 # ============================================================================
 
