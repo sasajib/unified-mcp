@@ -11,15 +11,10 @@ This module provides:
 - MCP protocol utilities
 """
 
-from .dynamic_registry import DynamicToolRegistry, ToolCapability
-from .progressive_discovery import (
-    search_tools,
-    describe_tools,
-    execute_tool,
-    ToolPreview,
-    ToolSchema,
-)
 from .capability_loader import CapabilityHandler, CapabilityLoader
+from .dynamic_registry import DynamicToolRegistry, ToolCapability
+from .progressive_discovery import (ToolPreview, ToolSchema, describe_tools,
+                                    execute_tool, search_tools)
 
 __all__ = [
     "DynamicToolRegistry",

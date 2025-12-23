@@ -12,16 +12,17 @@ These tests verify:
 - Error handling and recovery
 """
 
-import pytest
 import asyncio
 import json
 from pathlib import Path
 from unittest.mock import AsyncMock, Mock, patch
 
-# We'll import the server components
-from core.server import UnifiedMCPServer
+import pytest
+
 from core.capability_loader import CapabilityLoader
 from core.catalog import CatalogManager
+# We'll import the server components
+from core.server import UnifiedMCPServer
 
 
 @pytest.fixture

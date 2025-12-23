@@ -12,12 +12,12 @@ Requirements:
 These are integration tests and may be skipped if Node.js is not available.
 """
 
-import pytest
 import shutil
 from pathlib import Path
 
-from handlers.browser_automation import PlaywrightHandler
+import pytest
 
+from handlers.browser_automation import PlaywrightHandler
 
 # Check if npx is available
 NPX_AVAILABLE = shutil.which("npx") is not None

@@ -8,14 +8,10 @@ Unit tests for core.progressive_discovery module.
 import pytest
 
 from core.dynamic_registry import DynamicToolRegistry
-from core.progressive_discovery import (
-    ToolPreview,
-    ToolSchema,
-    search_tools,
-    describe_tools,
-    estimate_token_cost,
-    format_preview_for_display,
-)
+from core.progressive_discovery import (ToolPreview, ToolSchema,
+                                        describe_tools, estimate_token_cost,
+                                        format_preview_for_display,
+                                        search_tools)
 
 
 class TestSearchTools:

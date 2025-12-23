@@ -11,12 +11,12 @@ Requirements:
 These are integration tests and may be skipped if Codanna is not available.
 """
 
-import pytest
 import shutil
 from pathlib import Path
 
-from handlers.code_understanding import CodannaHandler
+import pytest
 
+from handlers.code_understanding import CodannaHandler
 
 # Check if Codanna is available
 CODANNA_AVAILABLE = shutil.which("codanna") is not None

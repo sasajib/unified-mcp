@@ -128,8 +128,8 @@ class CodannaHandler(CapabilityHandler):
     async def _watch_and_reindex(self) -> None:
         """Watch for file changes and re-index automatically."""
         try:
-            import watchdog.observers
             import watchdog.events
+            import watchdog.observers
 
             class CodeChangeHandler(watchdog.events.FileSystemEventHandler):
                 def __init__(self, handler):

@@ -11,12 +11,12 @@ Requirements:
 These are integration tests and may be skipped if Node.js is not available.
 """
 
-import pytest
 import shutil
 from pathlib import Path
 
-from handlers.documentation import Context7Handler
+import pytest
 
+from handlers.documentation import Context7Handler
 
 # Check if npx is available
 NPX_AVAILABLE = shutil.which("npx") is not None

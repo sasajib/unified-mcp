@@ -11,8 +11,9 @@ Requirements:
 These are integration tests and may be skipped if Claude-mem is not running.
 """
 
-import pytest
 from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 
 from handlers.memory_search import ClaudeMemHandler
 

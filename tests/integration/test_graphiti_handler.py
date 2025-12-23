@@ -14,17 +14,18 @@ These are integration tests and may be skipped if dependencies are not available
 """
 
 import os
-import pytest
 import shutil
 from pathlib import Path
 from tempfile import TemporaryDirectory
+
+import pytest
 
 from handlers.knowledge_graph import GraphitiHandler
 
 # Check if required packages are available
 try:
-    import real_ladybug as lb
     import graphiti_core
+    import real_ladybug as lb
 
     GRAPHITI_AVAILABLE = True
 except ImportError:
