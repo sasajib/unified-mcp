@@ -52,10 +52,23 @@ class TestDescribeTools:
     @pytest.mark.asyncio
     async def test_describe_tools(self, sample_catalog):
         """Describe tools returns ToolSchema objects."""
+        from unittest.mock import AsyncMock, patch
+
         registry = DynamicToolRegistry(sample_catalog)
 
-        # Use stub handler (real handler in Phase 2)
-        schemas = await describe_tools(registry, ["test_tool_1"])
+        # Mock the registry's describe_tools to return a schema
+        mock_schema = {
+            "name": "test_tool_1",
+            "description": "Test tool",
+            "input_schema": {
+                "type": "object",
+                "properties": {"param": {"type": "string"}},
+                "required": ["param"]
+            }
+        }
+
+        with patch.object(registry, 'describe_tools', new=AsyncMock(return_value=[mock_schema])):
+            schemas = await describe_tools(registry, ["test_tool_1"])
 
         assert len(schemas) == 1
         assert isinstance(schemas[0], ToolSchema)
@@ -63,9 +76,19 @@ class TestDescribeTools:
     @pytest.mark.asyncio
     async def test_tool_schema_attributes(self, sample_catalog):
         """ToolSchema has required attributes."""
+        from unittest.mock import AsyncMock, patch
+
         registry = DynamicToolRegistry(sample_catalog)
 
-        schemas = await describe_tools(registry, ["test_tool_1"])
+        # Mock the registry's describe_tools
+        mock_schema = {
+            "name": "test_tool_1",
+            "description": "Test tool",
+            "input_schema": {"type": "object", "properties": {}}
+        }
+
+        with patch.object(registry, 'describe_tools', new=AsyncMock(return_value=[mock_schema])):
+            schemas = await describe_tools(registry, ["test_tool_1"])
 
         if schemas:
             schema = schemas[0]

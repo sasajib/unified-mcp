@@ -108,14 +108,18 @@ class TestMemoryToolExecution:
     @pytest.mark.asyncio
     async def test_mem_search_execution(self, memory_handler):
         """mem_search makes correct HTTP POST request."""
-        # Mock HTTP client
+        # Mock HTTP response
         mock_response = Mock()
         mock_response.status_code = 200
         mock_response.json.return_value = {"observations": [{"id": 1, "content": "test"}]}
+        mock_response.raise_for_status = Mock()
 
-        with patch.object(memory_handler, "http_client") as mock_client:
-            mock_client.post = AsyncMock(return_value=mock_response)
+        # Mock httpx.AsyncClient
+        mock_client = AsyncMock()
+        mock_client.post = AsyncMock(return_value=mock_response)
+        mock_client.get = AsyncMock(return_value=mock_response)
 
+        with patch('httpx.AsyncClient', return_value=mock_client):
             await memory_handler.initialize()
             result = await memory_handler.execute(
                 "mem_search",
@@ -140,20 +144,24 @@ class TestMemoryToolExecution:
         mock_response = Mock()
         mock_response.status_code = 200
         mock_response.json.return_value = {"id": 123, "content": "observation data"}
+        mock_response.raise_for_status = Mock()
 
-        with patch.object(memory_handler, "http_client") as mock_client:
-            mock_client.get = AsyncMock(return_value=mock_response)
+        # Mock httpx.AsyncClient
+        mock_client = AsyncMock()
+        mock_client.get = AsyncMock(return_value=mock_response)
 
+        with patch('httpx.AsyncClient', return_value=mock_client):
             await memory_handler.initialize()
             result = await memory_handler.execute(
                 "mem_get_observation",
                 {"id": 123}
             )
 
-            # Verify HTTP call
-            mock_client.get.assert_called_once()
-            call_args = mock_client.get.call_args
-            assert "/api/observation/123" in call_args[0][0]
+            # Verify HTTP call - expect 2 calls (health check + actual API call)
+            assert mock_client.get.call_count == 2
+            # Check the second call (actual API call)
+            actual_call = mock_client.get.call_args_list[1]
+            assert "/api/observation/123" in actual_call[0][0]
 
             # Verify result
             assert result["status"] == "success"
@@ -166,21 +174,25 @@ class TestMemoryToolExecution:
         mock_response = Mock()
         mock_response.status_code = 200
         mock_response.json.return_value = {"recent": []}
+        mock_response.raise_for_status = Mock()
 
-        with patch.object(memory_handler, "http_client") as mock_client:
-            mock_client.get = AsyncMock(return_value=mock_response)
+        # Mock httpx.AsyncClient
+        mock_client = AsyncMock()
+        mock_client.get = AsyncMock(return_value=mock_response)
 
+        with patch('httpx.AsyncClient', return_value=mock_client):
             await memory_handler.initialize()
             result = await memory_handler.execute(
                 "mem_recent_context",
                 {"limit": 20}
             )
 
-            # Verify HTTP call
-            mock_client.get.assert_called_once()
-            call_args = mock_client.get.call_args
-            assert "/api/recent" in call_args[0][0]
-            assert call_args[1]["params"]["limit"] == 20
+            # Verify HTTP call - expect 2 calls (health check + actual API call)
+            assert mock_client.get.call_count == 2
+            # Check the second call (actual API call)
+            actual_call = mock_client.get.call_args_list[1]
+            assert "/api/recent" in actual_call[0][0]
+            assert actual_call[1]["params"]["limit"] == 20
 
             # Verify result
             assert result["status"] == "success"
@@ -192,10 +204,13 @@ class TestMemoryToolExecution:
         mock_response = Mock()
         mock_response.status_code = 200
         mock_response.json.return_value = {"timeline": []}
+        mock_response.raise_for_status = Mock()
 
-        with patch.object(memory_handler, "http_client") as mock_client:
-            mock_client.get = AsyncMock(return_value=mock_response)
+        # Mock httpx.AsyncClient
+        mock_client = AsyncMock()
+        mock_client.get = AsyncMock(return_value=mock_response)
 
+        with patch('httpx.AsyncClient', return_value=mock_client):
             await memory_handler.initialize()
             result = await memory_handler.execute(
                 "mem_timeline",
@@ -206,13 +221,14 @@ class TestMemoryToolExecution:
                 }
             )
 
-            # Verify HTTP call
-            mock_client.get.assert_called_once()
-            call_args = mock_client.get.call_args
-            assert "/api/timeline" in call_args[0][0]
-            assert call_args[1]["params"]["limit"] == 50
-            assert call_args[1]["params"]["start_date"] == "2024-01-01"
-            assert call_args[1]["params"]["end_date"] == "2024-12-31"
+            # Verify HTTP call - expect 2 calls (health check + actual API call)
+            assert mock_client.get.call_count == 2
+            # Check the second call (actual API call)
+            actual_call = mock_client.get.call_args_list[1]
+            assert "/api/timeline" in actual_call[0][0]
+            assert actual_call[1]["params"]["limit"] == 50
+            assert actual_call[1]["params"]["start_date"] == "2024-01-01"
+            assert actual_call[1]["params"]["end_date"] == "2024-12-31"
 
             # Verify result
             assert result["status"] == "success"

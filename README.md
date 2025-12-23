@@ -15,21 +15,31 @@ Consolidates code understanding (Codanna), documentation (Context7), browser aut
 ## Quick Start
 
 ```bash
-# Clone with submodules (Phase 2+)
-git clone --recursive <your-repo>
+# Clone with submodules
+git clone --recursive https://github.com/yourusername/unified-mcp.git
 cd unified-mcp
 
-# Setup (creates venv, installs deps)
-./setup.sh
+# Install dependencies (using uv - recommended)
+uv pip install -r requirements.txt
 
-# Activate virtual environment
-source .venv/bin/activate
+# Or using pip
+pip install -r requirements.txt
 
 # Run tests
 pytest tests/ -v
 
-# Start server
+# Start server (with uv)
+uvx --directory . -p 3.12 server.py
+
+# Or with python
 python server.py
+```
+
+**Add to Claude Code:**
+```bash
+claude mcp add unified-mcp
+# Command: uvx
+# Arguments: --directory /path/to/unified-mcp -p 3.12 server.py
 ```
 
 ## Progressive Discovery Pattern
@@ -90,6 +100,94 @@ python server.py
 ```
 
 Server runs on stdio (MCP protocol).
+
+### Configure with Claude Code
+
+**Option 1: Using `claude mcp add` (Recommended)**
+
+```bash
+# Add the unified MCP server
+claude mcp add unified-mcp
+
+# When prompted, use this configuration:
+# Command: uvx
+# Arguments: --directory /absolute/path/to/unified-mcp -p 3.12 server.py
+```
+
+**Option 2: Manual Configuration**
+
+Add to your MCP settings file (`~/.config/claude/mcp_settings.json`):
+
+```json
+{
+  "mcpServers": {
+    "unified-mcp": {
+      "command": "uvx",
+      "args": [
+        "--directory",
+        "/absolute/path/to/unified-mcp",
+        "-p",
+        "3.12",
+        "server.py"
+      ],
+      "env": {
+        "CODANNA_INDEX_DIR": "${workspaceFolder}/.codanna",
+        "CLAUDE_MEM_API_URL": "http://localhost:37777",
+        "GRAPHITI_ENABLED": "true",
+        "GOOGLE_API_KEY": "your-gemini-api-key-here"
+      }
+    }
+  }
+}
+```
+
+**With Graphiti + Google Gemini (Full Configuration):**
+
+```json
+{
+  "mcpServers": {
+    "unified-mcp": {
+      "command": "uvx",
+      "args": [
+        "--directory",
+        "/absolute/path/to/unified-mcp",
+        "-p",
+        "3.12",
+        "server.py"
+      ],
+      "env": {
+        "CODANNA_INDEX_DIR": "${workspaceFolder}/.codanna",
+        "CLAUDE_MEM_API_URL": "http://localhost:37777",
+        "GRAPHITI_ENABLED": "true",
+        "GRAPHITI_LLM_PROVIDER": "google_ai",
+        "GRAPHITI_EMBEDDER_PROVIDER": "google_ai",
+        "GOOGLE_API_KEY": "your-gemini-api-key-here",
+        "GRAPHITI_LLM_MODEL": "gemini-1.5-pro",
+        "GRAPHITI_EMBEDDER_MODEL": "text-embedding-004"
+      }
+    }
+  }
+}
+```
+
+**Environment Variables:**
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `CODANNA_INDEX_DIR` | No | `.codanna` | Codanna index directory |
+| `CLAUDE_MEM_API_URL` | No | `http://localhost:37777` | Claude-mem API endpoint |
+| `GRAPHITI_ENABLED` | No | `false` | Enable Graphiti knowledge graph |
+| `GRAPHITI_LLM_PROVIDER` | No | `openai` | LLM provider: `openai`, `anthropic`, `azure_openai`, `ollama`, `google_ai` |
+| `GRAPHITI_EMBEDDER_PROVIDER` | No | `openai` | Embedder: `openai`, `voyage_ai`, `azure_openai`, `ollama`, `google_ai` |
+| `GOOGLE_API_KEY` | If using Gemini | - | Google AI API key for Gemini |
+| `OPENAI_API_KEY` | If using OpenAI | - | OpenAI API key |
+| `ANTHROPIC_API_KEY` | If using Claude | - | Anthropic API key |
+
+**Restart Claude Code** to load the server.
+
+**Verify it's working:**
+- Ask Claude: "What tools do you have available?"
+- You should see tools like `search_tools`, `describe_tools`, `execute_tool`, etc.
 
 ### Configuration
 
