@@ -1,3 +1,9 @@
 [submodule "capabilities/codanna"]
 	path = capabilities/codanna
 	url = https://github.com/bartolli/codanna.git
+[submodule "capabilities/context7"]
+	path = capabilities/context7
+	url = https://github.com/upstash/context7.git
+[submodule "capabilities/playwright-mcp"]
+	path = capabilities/playwright-mcp
+	url = https://github.com/microsoft/playwright-mcp.git
