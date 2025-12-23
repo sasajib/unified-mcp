@@ -57,23 +57,28 @@ class ClaudeMemHandler(CapabilityHandler):
             "mem_search": {
                 "name": "mem_search",
                 "description": (
-                    "Search memory observations using semantic search. "
-                    "Returns relevant observations from past sessions."
+                    "Search recent memory observations from past sessions. "
+                    "Returns relevant context from previous work."
                 ),
                 "input_schema": {
                     "type": "object",
                     "properties": {
                         "query": {
                             "type": "string",
-                            "description": "Search query (natural language)",
+                            "description": "Search query (natural language, optional)",
                         },
                         "limit": {
                             "type": "integer",
                             "description": "Maximum number of results (default: 10)",
                             "default": 10,
                         },
+                        "project": {
+                            "type": "string",
+                            "description": "Project name to filter by (default: 'default')",
+                            "default": "default",
+                        },
                     },
-                    "required": ["query"],
+                    "required": [],
                 },
             },
             "mem_get_observation": {
@@ -156,15 +161,19 @@ class ClaudeMemHandler(CapabilityHandler):
         """
         Search memory observations.
 
-        Calls Claude-mem API: POST /api/search
+        Calls Claude-mem API: GET /api/context/recent
+        Note: Claude-mem v8+ uses /api/context/recent instead of /api/search
         """
-        query = args["query"]
+        query = args.get("query", "")
         limit = args.get("limit", 10)
+        project = args.get("project", "default")
 
         try:
-            response = await self.http_client.post(
-                f"{self.api_url}/api/search",
-                json={"query": query, "limit": limit}
+            # Use recent context endpoint as search fallback
+            # Claude-mem v8+ has reorganized endpoints
+            response = await self.http_client.get(
+                f"{self.api_url}/api/context/recent",
+                params={"project": project, "limit": limit}
             )
             response.raise_for_status()
             result = response.json()
@@ -173,6 +182,7 @@ class ClaudeMemHandler(CapabilityHandler):
                 "status": "success",
                 "tool": "mem_search",
                 "query": query,
+                "project": project,
                 "results": result,
             }
 
