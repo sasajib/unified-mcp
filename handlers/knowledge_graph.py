@@ -300,8 +300,8 @@ class GraphitiHandler(CapabilityHandler):
             f"GRAPHITI_EMBEDDER_PROVIDER={embedder_provider}"
         )
         self.logger.info(f"Models: LLM={llm_model}, Embedder={embedder_model}")
-        google_key_status = 'set' if os.getenv('GOOGLE_API_KEY') else 'not set'
-        openai_key_status = 'set' if os.getenv('OPENAI_API_KEY') else 'not set'
+        google_key_status = "set" if os.getenv("GOOGLE_API_KEY") else "not set"
+        openai_key_status = "set" if os.getenv("OPENAI_API_KEY") else "not set"
         self.logger.info(
             f"API Keys: GOOGLE_API_KEY={google_key_status}, "
             f"OPENAI_API_KEY={openai_key_status}"
