@@ -174,22 +174,9 @@ class Context7Handler(CapabilityHandler):
             RuntimeError: If Context7 MCP call fails
         """
         try:
-            # Build MCP request JSON
-            request = {
-                "jsonrpc": "2.0",
-                "method": "tools/call",
-                "params": {
-                    "name": tool_name,
-                    "arguments": params
-                },
-                "id": 1
-            }
-
-            request_json = json.dumps(request)
-
             self.logger.debug(f"Calling Context7 MCP: {tool_name} with {params}")
 
-            # Call npx @upstash/context7-mcp with MCP JSON-RPC
+            # Start Context7 MCP server process
             process = await asyncio.create_subprocess_exec(
                 self.npx_path,
                 "-y",
@@ -199,38 +186,90 @@ class Context7Handler(CapabilityHandler):
                 stderr=asyncio.subprocess.PIPE,
             )
 
-            stdout, stderr = await process.communicate(input=request_json.encode())
+            # Step 1: Send MCP initialize request
+            initialize_request = {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "initialize",
+                "params": {
+                    "protocolVersion": "2024-11-05",
+                    "capabilities": {},
+                    "clientInfo": {
+                        "name": "unified-mcp",
+                        "version": "1.0.0"
+                    }
+                }
+            }
 
-            if process.returncode != 0:
-                error_msg = stderr.decode("utf-8").strip()
-                self.logger.error(f"Context7 MCP failed: {error_msg}")
-                raise RuntimeError(f"Context7 MCP error: {error_msg}")
+            init_json = json.dumps(initialize_request) + "\n"
+            process.stdin.write(init_json.encode())
+            await process.stdin.drain()
 
-            output = stdout.decode("utf-8").strip()
+            # Step 2: Read initialize response
+            init_response_line = await process.stdout.readline()
+            init_response = json.loads(init_response_line.decode().strip())
 
-            # Parse MCP response (JSON-RPC format)
-            try:
-                # Context7 might return multiple JSON-RPC messages, take the last one
-                lines = [line for line in output.split('\n') if line.strip()]
-                if not lines:
-                    raise RuntimeError("No output from Context7 MCP")
+            if "error" in init_response:
+                raise RuntimeError(f"Context7 MCP initialization error: {init_response['error']}")
 
-                response = json.loads(lines[-1])
+            self.logger.debug("Context7 MCP initialized successfully")
 
-                if "error" in response:
-                    raise RuntimeError(f"Context7 MCP error: {response['error']}")
+            # Step 3: Send tools/call request
+            tool_request = {
+                "jsonrpc": "2.0",
+                "id": 2,
+                "method": "tools/call",
+                "params": {
+                    "name": tool_name,
+                    "arguments": params
+                }
+            }
 
-                return response.get("result", {})
+            tool_json = json.dumps(tool_request) + "\n"
+            process.stdin.write(tool_json.encode())
+            await process.stdin.drain()
 
-            except json.JSONDecodeError as e:
-                self.logger.error(f"Invalid JSON from Context7 MCP: {output[:200]}")
-                raise RuntimeError(f"Invalid JSON from Context7 MCP: {e}")
+            # Step 4: Read tools/call response
+            tool_response_line = await process.stdout.readline()
+
+            if not tool_response_line:
+                # Try to get any stderr output for debugging
+                stderr_output = ""
+                try:
+                    stderr_data = await asyncio.wait_for(process.stderr.read(), timeout=1.0)
+                    stderr_output = stderr_data.decode("utf-8").strip()
+                except asyncio.TimeoutError:
+                    pass
+
+                raise RuntimeError(
+                    f"No response from Context7 MCP for tool '{tool_name}'. "
+                    f"Stderr: {stderr_output if stderr_output else 'none'}"
+                )
+
+            tool_response = json.loads(tool_response_line.decode().strip())
+
+            # Close the process
+            process.stdin.close()
+            await process.wait()
+
+            # Parse response
+            if "error" in tool_response:
+                raise RuntimeError(f"Context7 MCP error: {tool_response['error']}")
+
+            return tool_response.get("result", {})
 
         except FileNotFoundError:
             raise RuntimeError(
                 f"npx executable not found at {self.npx_path}. "
                 "Install Node.js 18+ from https://nodejs.org/"
             )
+        except json.JSONDecodeError as e:
+            self.logger.error(f"Invalid JSON from Context7 MCP")
+            raise RuntimeError(f"Invalid JSON from Context7 MCP: {e}")
         except Exception as e:
             self.logger.error(f"Error calling Context7 MCP: {e}")
+            # Clean up process if it's still running
+            if process and process.returncode is None:
+                process.kill()
+                await process.wait()
             raise
