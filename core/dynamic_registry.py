@@ -7,7 +7,6 @@ Core registry for managing MCP tool capabilities with lazy loading.
 Based on Docker MCP Gateway pattern with dynamic tool discovery.
 """
 
-import asyncio
 import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional

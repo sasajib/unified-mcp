@@ -14,10 +14,8 @@ Maps unified-mcp tools to Playwright's MCP tools:
 
 import asyncio
 import json
-import logging
 import shutil
-from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from core.capability_loader import CapabilityHandler
 
@@ -93,7 +91,10 @@ class PlaywrightHandler(CapabilityHandler):
                     "properties": {
                         "filename": {
                             "type": "string",
-                            "description": "File name to save screenshot (defaults to page-{timestamp}.png)",
+                            "description": (
+                                "File name to save screenshot "
+                                "(defaults to page-{timestamp}.png)"
+                            ),
                         },
                         "type": {
                             "type": "string",
@@ -336,7 +337,7 @@ class PlaywrightHandler(CapabilityHandler):
                 "Install Node.js 18+ from https://nodejs.org/"
             )
         except json.JSONDecodeError as e:
-            self.logger.error(f"Invalid JSON from Playwright MCP")
+            self.logger.error("Invalid JSON from Playwright MCP")
             raise RuntimeError(f"Invalid JSON from Playwright MCP: {e}")
         except Exception as e:
             self.logger.error(f"Error calling Playwright MCP: {e}")

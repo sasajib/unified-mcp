@@ -13,10 +13,9 @@ Maps unified-mcp tools to Codanna's MCP tools:
 
 import asyncio
 import json
-import logging
 import shutil
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 
 from core.capability_loader import CapabilityHandler
 
@@ -207,7 +206,10 @@ class CodannaHandler(CapabilityHandler):
                     "properties": {
                         "query": {
                             "type": "string",
-                            "description": "Natural language search query (e.g., 'authentication logic', 'error handling')",
+                            "description": (
+                                "Natural language search query "
+                                "(e.g., 'authentication logic', 'error handling')"
+                            ),
                         },
                         "limit": {
                             "type": "integer",

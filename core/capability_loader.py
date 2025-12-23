@@ -11,7 +11,7 @@ tools and services (Codanna, Context7, Playwright, etc.).
 import logging
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
