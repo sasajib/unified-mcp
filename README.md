@@ -4,6 +4,8 @@
 
 Consolidates code understanding (Codanna), documentation (Context7), browser automation (Playwright), memory (Claude-mem), and knowledge graph (Graphiti+LadybugDB) into one unified server.
 
+> ✨ **NEW**: Graphiti knowledge graph now supports Google Gemini! Use free Gemini API with embedded LadybugDB (no Docker required).
+
 ## Features
 
 ✨ **Progressive Discovery** - 3-step pattern reduces tokens from 10,000+ to 50-200
@@ -249,9 +251,21 @@ Add to your MCP settings file (`~/.config/claude/mcp_settings.json`):
 | `GRAPHITI_ENABLED` | No | `false` | Enable Graphiti knowledge graph |
 | `GRAPHITI_LLM_PROVIDER` | No | `openai` | LLM provider: `openai`, `anthropic`, `azure_openai`, `ollama`, `google_ai` |
 | `GRAPHITI_EMBEDDER_PROVIDER` | No | `openai` | Embedder: `openai`, `voyage_ai`, `azure_openai`, `ollama`, `google_ai` |
+| `GRAPHITI_LLM_MODEL` | No | (varies) | Model name (e.g., `gemini-2.5-flash`, `gpt-4o`, `claude-3-5-sonnet-20241022`) |
+| `GRAPHITI_EMBEDDER_MODEL` | No | (varies) | Embedder model (e.g., `text-embedding-004`, `text-embedding-3-small`) |
+| `GRAPHITI_RERANKER_MODEL` | No | `gemini-2.5-flash-lite` | Reranker model (Gemini only) |
 | `GOOGLE_API_KEY` | If using Gemini | - | Google AI API key for Gemini |
 | `OPENAI_API_KEY` | If using OpenAI | - | OpenAI API key |
 | `ANTHROPIC_API_KEY` | If using Claude | - | Anthropic API key |
+
+**Playwright Browser Configuration:**
+
+Browser automation runs with **headless=false** by default (shows browser window). Configure in `config/catalog.yaml`:
+
+```yaml
+browser_automation:
+  headless: false  # Set to true to run browser in background
+```
 
 **Restart Claude Code** to load the server.
 

@@ -29,6 +29,7 @@ capabilities:
     enabled: true
     type: playwright
     source: capabilities/playwright-mcp
+    headless: false  # Set to true to run browser in background
     tools:
       - playwright_navigate
       - playwright_screenshot

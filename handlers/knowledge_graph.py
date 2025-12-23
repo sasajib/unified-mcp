@@ -34,6 +34,7 @@ from core.capability_loader import CapabilityHandler
 try:
     from graphiti_core.llm_client.gemini_client import GeminiClient
     from graphiti_core.embedder.gemini import GeminiEmbedder, GeminiEmbedderConfig
+    from graphiti_core.cross_encoder.gemini_reranker_client import GeminiRerankerClient
     HAS_GEMINI = True
 except ImportError:
     HAS_GEMINI = False
@@ -76,7 +77,8 @@ class LadybugDriverSession(GraphDriverSession):
 
     async def run(self, query: str, **kwargs: Any) -> Any:
         """Execute Cypher query on LadybugDB."""
-        params = {k: v for k, v in kwargs.items() if v is not None}
+        # Don't filter None values - LadybugDB needs all referenced parameters
+        params = dict(kwargs)
         # Remove Neo4j-specific parameters
         params.pop("database_", None)
         params.pop("routing_", None)
@@ -84,9 +86,14 @@ class LadybugDriverSession(GraphDriverSession):
         try:
             result = self.driver.conn.execute(query, params)
             # Convert LadybugDB result to list of dicts
+            # Get column names from the result
+            column_names = result.get_column_names()
             records = []
             while result.has_next():
-                records.append(result.get_next())
+                row = result.get_next()
+                # Convert row list to dict using column names
+                record_dict = {col: row[i] for i, col in enumerate(column_names)}
+                records.append(record_dict)
             return records
         except Exception as e:
             logging.error(f"LadybugDB query error: {e}\n{query}\n{params}")
@@ -108,6 +115,15 @@ class LadybugDriver(GraphDriver):
         super().__init__()
         self.db = lb.Database(db_path)
         self.conn = lb.Connection(self.db)
+
+        # Install and load FTS extension for full-text search
+        try:
+            self.conn.execute("INSTALL FTS")
+            self.conn.execute("LOAD EXTENSION FTS")
+        except Exception as e:
+            # Extension might already be installed/loaded
+            logging.debug(f"FTS extension setup: {e}")
+
         self.setup_schema()
 
     def setup_schema(self):
@@ -180,19 +196,44 @@ class LadybugDriver(GraphDriver):
             if query:
                 self.conn.execute(query)
 
+        # Create FTS indexes for full-text search using CALL syntax
+        try:
+            # Entity table FTS index
+            self.conn.execute("""
+                CALL CREATE_FTS_INDEX('Entity', 'node_name_and_summary', ['name', 'summary'])
+            """)
+        except Exception as e:
+            # Index might already exist
+            logging.debug(f"Entity FTS index creation: {e}")
+
+        try:
+            # Edge table FTS index
+            self.conn.execute("""
+                CALL CREATE_FTS_INDEX('RelatesToNode_', 'edge_name_and_fact', ['name', 'fact'])
+            """)
+        except Exception as e:
+            # Index might already exist
+            logging.debug(f"Edge FTS index creation: {e}")
+
     async def execute_query(
         self, cypher_query: str, **kwargs: Any
     ) -> tuple[list[dict[str, Any]] | list[list[dict[str, Any]]], None, None]:
         """Execute Cypher query."""
-        params = {k: v for k, v in kwargs.items() if v is not None}
+        # Don't filter None values - LadybugDB needs all referenced parameters
+        params = dict(kwargs)
         params.pop("database_", None)
         params.pop("routing_", None)
 
         try:
             result = self.conn.execute(cypher_query, params)
+            # Convert LadybugDB result to list of dicts
+            column_names = result.get_column_names()
             records = []
             while result.has_next():
-                records.append(result.get_next())
+                row = result.get_next()
+                # Convert row list to dict using column names
+                record_dict = {col: row[i] for i, col in enumerate(column_names)}
+                records.append(record_dict)
             return records, None, None
         except Exception as e:
             params_preview = {k: (v[:5] if isinstance(v, list) else v) for k, v in params.items()}
@@ -263,10 +304,10 @@ class GraphitiHandler(CapabilityHandler):
 
             config = LLMConfig(
                 api_key=api_key,
-                model=llm_model or "gemini-1.5-flash-latest"
+                model=llm_model or "gemini-2.5-flash"
             )
             llm_client = GeminiClient(config=config)
-            self.logger.info(f"Using Gemini LLM: {llm_model or 'gemini-1.5-flash-latest'}")
+            self.logger.info(f"Using Gemini LLM: {llm_model or 'gemini-2.5-flash'}")
 
         elif llm_provider == "anthropic":
             if not HAS_ANTHROPIC:
@@ -330,11 +371,34 @@ class GraphitiHandler(CapabilityHandler):
         else:
             raise ValueError(f"Unsupported embedder provider: {embedder_provider}")
 
+        # Create cross-encoder (reranker) based on LLM provider
+        # Use the same provider as the LLM for consistency
+        if llm_provider == "google_ai" or llm_provider == "google":
+            reranker_config = LLMConfig(
+                api_key=os.getenv("GOOGLE_API_KEY"),
+                model=os.getenv("GRAPHITI_RERANKER_MODEL") or "gemini-2.5-flash-lite"
+            )
+            cross_encoder = GeminiRerankerClient(config=reranker_config)
+            self.logger.info(f"Using Gemini reranker: {reranker_config.model}")
+        elif llm_provider == "openai":
+            # For OpenAI, Graphiti will create default OpenAIRerankerClient if we pass None
+            # But let's be explicit about it
+            from graphiti_core.cross_encoder.openai_reranker_client import OpenAIRerankerClient
+            from graphiti_core.cross_encoder.client import OpenAIRerankerConfig
+            reranker_config = OpenAIRerankerConfig(api_key=os.getenv("OPENAI_API_KEY"))
+            cross_encoder = OpenAIRerankerClient(config=reranker_config)
+            self.logger.info("Using OpenAI reranker")
+        else:
+            # For other providers, disable cross-encoder
+            cross_encoder = None
+            self.logger.info("Cross-encoder disabled (no reranker for this provider)")
+
         # Initialize Graphiti with configured providers
         self.graphiti = Graphiti(
             graph_driver=driver,
             llm_client=llm_client,
             embedder=embedder,
+            cross_encoder=cross_encoder,
         )
 
         self.logger.info(
@@ -492,6 +556,23 @@ class GraphitiHandler(CapabilityHandler):
             # Use Graphiti's search functionality
             results = await self.graphiti.search(query, num_results=limit)
 
+            # Handle different return types from Graphiti search
+            if isinstance(results, list):
+                # Results is a list of edges
+                edges = results
+                nodes = []
+                episodes = []
+            elif hasattr(results, 'nodes'):
+                # Results is a SearchResults object
+                nodes = results.nodes
+                edges = results.edges
+                episodes = results.episodes
+            else:
+                # Unknown format, treat as empty
+                nodes = []
+                edges = []
+                episodes = []
+
             # Format results
             formatted_results = {
                 "nodes": [
@@ -501,16 +582,16 @@ class GraphitiHandler(CapabilityHandler):
                         "summary": getattr(node, "summary", None),
                         "type": type(node).__name__,
                     }
-                    for node in results.nodes
+                    for node in nodes
                 ],
                 "edges": [
                     {
                         "uuid": edge.uuid,
                         "fact": edge.fact,
-                        "source": edge.source_node_uuid,
-                        "target": edge.target_node_uuid,
+                        "source": edge.source_node_uuid if hasattr(edge, 'source_node_uuid') else None,
+                        "target": edge.target_node_uuid if hasattr(edge, 'target_node_uuid') else None,
                     }
-                    for edge in results.edges
+                    for edge in edges
                 ],
                 "episodes": [
                     {
@@ -519,7 +600,7 @@ class GraphitiHandler(CapabilityHandler):
                         "content": ep.content,
                         "valid_at": str(ep.valid_at),
                     }
-                    for ep in results.episodes
+                    for ep in episodes
                 ],
             }
 
@@ -529,9 +610,9 @@ class GraphitiHandler(CapabilityHandler):
                 "query": query,
                 "results": formatted_results,
                 "count": {
-                    "nodes": len(results.nodes),
-                    "edges": len(results.edges),
-                    "episodes": len(results.episodes),
+                    "nodes": len(nodes),
+                    "edges": len(edges),
+                    "episodes": len(episodes),
                 },
             }
 
