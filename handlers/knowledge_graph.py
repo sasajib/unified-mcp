@@ -22,8 +22,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from graphiti_core import Graphiti
-from graphiti_core.driver.driver import (GraphDriver, GraphDriverSession,
-                                         GraphProvider)
+from graphiti_core.driver.driver import GraphDriver, GraphDriverSession, GraphProvider
 from graphiti_core.embedder import OpenAIEmbedder
 from graphiti_core.llm_client import OpenAIClient
 from graphiti_core.llm_client.config import LLMConfig
@@ -33,10 +32,8 @@ from core.capability_loader import CapabilityHandler
 
 # Optional imports for alternative providers
 try:
-    from graphiti_core.cross_encoder.gemini_reranker_client import \
-        GeminiRerankerClient
-    from graphiti_core.embedder.gemini import (GeminiEmbedder,
-                                               GeminiEmbedderConfig)
+    from graphiti_core.cross_encoder.gemini_reranker_client import GeminiRerankerClient
+    from graphiti_core.embedder.gemini import GeminiEmbedder, GeminiEmbedderConfig
     from graphiti_core.llm_client.gemini_client import GeminiClient
 
     HAS_GEMINI = True
@@ -408,8 +405,9 @@ class GraphitiHandler(CapabilityHandler):
             # For OpenAI, Graphiti will create default OpenAIRerankerClient if we pass None
             # But let's be explicit about it
             from graphiti_core.cross_encoder.client import OpenAIRerankerConfig
-            from graphiti_core.cross_encoder.openai_reranker_client import \
-                OpenAIRerankerClient
+            from graphiti_core.cross_encoder.openai_reranker_client import (
+                OpenAIRerankerClient,
+            )
 
             reranker_config = OpenAIRerankerConfig(api_key=os.getenv("OPENAI_API_KEY"))
             cross_encoder = OpenAIRerankerClient(config=reranker_config)

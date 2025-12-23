@@ -13,8 +13,13 @@ This module provides:
 
 from .capability_loader import CapabilityHandler, CapabilityLoader
 from .dynamic_registry import DynamicToolRegistry, ToolCapability
-from .progressive_discovery import (ToolPreview, ToolSchema, describe_tools,
-                                    execute_tool, search_tools)
+from .progressive_discovery import (
+    ToolPreview,
+    ToolSchema,
+    describe_tools,
+    execute_tool,
+    search_tools,
+)
 
 __all__ = [
     "DynamicToolRegistry",

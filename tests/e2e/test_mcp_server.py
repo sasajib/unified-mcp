@@ -21,6 +21,7 @@ import pytest
 
 from core.capability_loader import CapabilityLoader
 from core.catalog import CatalogManager
+
 # We'll import the server components
 from core.server import UnifiedMCPServer
 
