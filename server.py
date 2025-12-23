@@ -156,234 +156,177 @@ async def list_tools() -> list[Tool]:
 
 
 # ============================================================================
-# PROGRESSIVE DISCOVERY TOOLS (Core Interface)
+# ============================================================================
+# MCP TOOL CALL HANDLER (Routes to specific implementations)
 # ============================================================================
 
 
 @app.call_tool()
-async def search_tools(query: str, max_results: int = 10) -> dict:
-    """
-    Step 1: Search for relevant tools (minimal preview).
+async def call_tool(name: str, arguments: dict) -> list:
+    """Unified tool call handler - routes to specific implementations."""
+    logger.info(f"Tool called: {name} with arguments: {arguments}")
 
-    Token cost: ~50 tokens for 10 tools
+    try:
+        # Route to the appropriate tool implementation
+        if name == "search_tools":
+            return await handle_search_tools(arguments)
+        elif name == "describe_tools":
+            return await handle_describe_tools(arguments)
+        elif name == "execute_tool":
+            return await handle_execute_tool(arguments)
+        elif name == "list_capabilities":
+            return await handle_list_capabilities(arguments)
+        elif name == "enable_capability":
+            return await handle_enable_capability(arguments)
+        elif name == "disable_capability":
+            return await handle_disable_capability(arguments)
+        elif name == "get_server_info":
+            return await handle_get_server_info(arguments)
+        else:
+            return [{"type": "text", "text": f"Error: Unknown tool '{name}'"}]
+    except Exception as e:
+        logger.error(f"Tool execution failed: {e}", exc_info=True)
+        return [{"type": "text", "text": f"Error: {str(e)}"}]
 
-    Args:
-        query: Natural language search query (e.g., "code search")
-        max_results: Maximum number of results to return
 
-    Returns:
-        {
-            'matches': [
-                {
-                    'name': 'search_code',
-                    'capability': 'code_understanding',
-                    'description': 'Search codebase semantically',
-                    'tokens_estimate': 200
-                },
-                ...
-            ],
-            'next_step': 'Call describe_tools([names]) to get full schemas'
-        }
+# ============================================================================
+# TOOL IMPLEMENTATIONS
+# ============================================================================
 
-    Example:
-        search_tools("authentication") → List of auth-related tools
-    """
-    logger.info(f"search_tools called with query: '{query}'")
 
+async def handle_search_tools(arguments: dict) -> list:
+    """Search for relevant tools."""
+    query = arguments.get("query", "")
+    max_results = arguments.get("max_results", 10)
+    
+    logger.info(f"search_tools: query='{query}', max_results={max_results}")
+    
     try:
         results = await registry.search_tools(query, max_results)
-        return {
-            "matches": results,
-            "count": len(results),
-            "next_step": "Call describe_tools([names]) to get full schemas",
-        }
+        
+        if not results:
+            return [{"type": "text", "text": f"No tools found matching '{query}'"}]
+        
+        text = f"Found {len(results)} matching tools:\n\n"
+        for r in results:
+            text += f"• **{r['name']}** ({r['capability']})\n"
+            text += f"  {r['description']}\n"
+            text += f"  Est. tokens: {r.get('tokens_estimate', 'N/A')}\n\n"
+        
+        text += "\nNext step: Use describe_tools([names]) to get full schemas"
+        
+        return [{"type": "text", "text": text}]
     except Exception as e:
         logger.error(f"search_tools failed: {e}")
-        return {"error": str(e), "matches": []}
+        return [{"type": "text", "text": f"Error: {str(e)}"}]
 
 
-@app.call_tool()
-async def describe_tools(tool_names: list) -> dict:
-    """
-    Step 2: Get full schemas for specific tools.
-
-    Token cost: ~200 tokens per tool
-
-    Args:
-        tool_names: List of tool names to describe
-
-    Returns:
-        {
-            'tools': [
-                {
-                    'name': 'search_code',
-                    'description': '...',
-                    'input_schema': {...},
-                    'examples': [...]
-                },
-                ...
-            ],
-            'next_step': 'Call execute_tool(name, args) to run'
-        }
-
-    Example:
-        describe_tools(["search_code", "get_call_graph"])
-    """
-    logger.info(f"describe_tools called for: {tool_names}")
-
+async def handle_describe_tools(arguments: dict) -> list:
+    """Get full schemas for specific tools."""
+    tool_names = arguments.get("tool_names", [])
+    
+    logger.info(f"describe_tools: {tool_names}")
+    
     try:
         schemas = await registry.describe_tools(tool_names)
-        return {
-            "tools": schemas,
-            "count": len(schemas),
-            "next_step": "Call execute_tool(name, args) to run a tool",
-        }
+        
+        if not schemas:
+            return [{"type": "text", "text": "No schemas found"}]
+        
+        text = f"Tool schemas ({len(schemas)} tools):\n\n"
+        for schema in schemas:
+            text += f"### {schema['name']}\n"
+            text += f"{schema.get('description', 'No description')}\n\n"
+            text += "**Input Schema:**\n```json\n"
+            import json
+            text += json.dumps(schema.get('input_schema', {}), indent=2)
+            text += "\n```\n\n"
+        
+        text += "\nNext step: Use execute_tool(name, args) to run a tool"
+        
+        return [{"type": "text", "text": text}]
     except Exception as e:
         logger.error(f"describe_tools failed: {e}")
-        return {"error": str(e), "tools": []}
+        return [{"type": "text", "text": f"Error: {str(e)}"}]
 
 
-@app.call_tool()
-async def execute_tool(tool_name: str, arguments: dict) -> dict:
-    """
-    Step 3: Execute a tool.
-
-    Args:
-        tool_name: Name of the tool to execute
-        arguments: Tool arguments as dict
-
-    Returns:
-        Tool execution result
-
-    Example:
-        execute_tool("search_code", {"query": "auth", "language": "python"})
-    """
-    logger.info(f"execute_tool called: {tool_name}")
-
+async def handle_execute_tool(arguments: dict) -> list:
+    """Execute a specific tool."""
+    tool_name = arguments.get("tool_name", "")
+    tool_arguments = arguments.get("arguments", {})
+    
+    logger.info(f"execute_tool: {tool_name} with args {tool_arguments}")
+    
     try:
-        result = await registry.execute_tool(tool_name, arguments)
-        return result
-    except ValueError as e:
-        logger.error(f"Tool not found: {e}")
-        return {"error": f"Tool not found: {tool_name}"}
+        result = await registry.execute_tool(tool_name, tool_arguments)
+        
+        import json
+        result_text = json.dumps(result, indent=2)
+        
+        return [{"type": "text", "text": f"Tool '{tool_name}' result:\n```json\n{result_text}\n```"}]
     except Exception as e:
         logger.error(f"execute_tool failed: {e}")
-        return {"error": str(e)}
+        return [{"type": "text", "text": f"Error executing '{tool_name}': {str(e)}"}]
 
 
-# ============================================================================
-# CAPABILITY MANAGEMENT TOOLS (Runtime Control)
-# ============================================================================
-
-
-@app.call_tool()
-async def list_capabilities(arguments: dict) -> dict:
-    """
-    List all available capabilities and their status.
-
-    Returns:
-        {
-            'capabilities': [
-                {
-                    'name': 'code_understanding',
-                    'enabled': True,
-                    'type': 'codanna',
-                    'tools': ['search_code', 'get_call_graph', ...],
-                    'description': '...',
-                    'loaded': False
-                },
-                ...
-            ]
-        }
-
-    Example:
-        list_capabilities() → See all available capabilities
-    """
+async def handle_list_capabilities(arguments: dict) -> list:
+    """List all available capabilities."""
     logger.info("list_capabilities called")
-
+    
     try:
         capabilities = await registry.get_all_capabilities()
-        return {"capabilities": capabilities, "count": len(capabilities)}
+        
+        text = f"Available capabilities ({len(capabilities)}):\n\n"
+        for cap in capabilities:
+            status = "✓ Enabled" if cap.get('enabled') else "✗ Disabled"
+            text += f"• **{cap['name']}** [{status}]\n"
+            text += f"  Type: {cap.get('type', 'unknown')}\n"
+            text += f"  Tools: {', '.join(cap.get('tools', []))}\n"
+            text += f"  {cap.get('description', '')}\n\n"
+        
+        return [{"type": "text", "text": text}]
     except Exception as e:
         logger.error(f"list_capabilities failed: {e}")
-        return {"error": str(e), "capabilities": []}
+        return [{"type": "text", "text": f"Error: {str(e)}"}]
 
 
-@app.call_tool()
-async def enable_capability(capability_name: str) -> dict:
-    """
-    Dynamically enable a capability at runtime.
-
-    Args:
-        capability_name: Name of capability to enable
-
-    Returns:
-        {'status': 'Capability enabled'}
-
-    Example:
-        enable_capability("browser_automation")
-    """
-    logger.info(f"enable_capability called: {capability_name}")
-
+async def handle_enable_capability(arguments: dict) -> list:
+    """Enable a capability."""
+    capability_name = arguments.get("capability_name", "")
+    
+    logger.info(f"enable_capability: {capability_name}")
+    
     try:
         result = await registry.enable_capability(capability_name)
-        return result
+        return [{"type": "text", "text": f"✓ Enabled capability '{capability_name}'"}]
     except Exception as e:
         logger.error(f"enable_capability failed: {e}")
-        return {"error": str(e)}
+        return [{"type": "text", "text": f"Error: {str(e)}"}]
 
 
-@app.call_tool()
-async def disable_capability(capability_name: str) -> dict:
-    """
-    Dynamically disable a capability at runtime.
-
-    Unloads the capability to free resources.
-
-    Args:
-        capability_name: Name of capability to disable
-
-    Returns:
-        {'status': 'Capability disabled'}
-
-    Example:
-        disable_capability("browser_automation")
-    """
-    logger.info(f"disable_capability called: {capability_name}")
-
+async def handle_disable_capability(arguments: dict) -> list:
+    """Disable a capability."""
+    capability_name = arguments.get("capability_name", "")
+    
+    logger.info(f"disable_capability: {capability_name}")
+    
     try:
         result = await registry.disable_capability(capability_name)
-        return result
+        return [{"type": "text", "text": f"✓ Disabled capability '{capability_name}'"}]
     except Exception as e:
         logger.error(f"disable_capability failed: {e}")
-        return {"error": str(e)}
+        return [{"type": "text", "text": f"Error: {str(e)}"}]
 
 
-@app.call_tool()
-async def get_server_info(arguments: dict) -> dict:
-    """
-    Get information about the unified MCP server.
-
-    Returns:
-        {
-            'name': 'unified-dynamic-mcp',
-            'version': '1.0.0',
-            'capabilities_count': 5,
-            'enabled_capabilities': ['code_understanding', ...],
-            'discovery_mode': 'progressive',
-            'token_estimate': {...}
-        }
-
-    Example:
-        get_server_info() → Server metadata and stats
-    """
+async def handle_get_server_info(arguments: dict) -> list:
+    """Get server information."""
     logger.info("get_server_info called")
-
+    
     try:
         enabled = await registry.get_enabled_capabilities()
         discovery_config = registry.get_discovery_config()
-
-        return {
+        
+        info = {
             "name": "unified-dynamic-mcp",
             "version": "1.0.0",
             "capabilities_count": len(registry.capabilities),
@@ -391,12 +334,19 @@ async def get_server_info(arguments: dict) -> dict:
             "discovery_mode": discovery_config.get("mode", "progressive"),
             "max_tools_in_context": discovery_config.get("max_tools_in_context", 10),
         }
+        
+        import json
+        text = "Unified MCP Server Info:\n```json\n"
+        text += json.dumps(info, indent=2)
+        text += "\n```"
+        
+        return [{"type": "text", "text": text}]
     except Exception as e:
         logger.error(f"get_server_info failed: {e}")
-        return {"error": str(e)}
+        return [{"type": "text", "text": f"Error: {str(e)}"}]
 
 
-# ============================================================================
+
 # SERVER LIFECYCLE
 # ============================================================================
 
