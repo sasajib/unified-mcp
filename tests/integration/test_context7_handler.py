@@ -110,8 +110,7 @@ class TestContext7ToolExecution:
         """resolve_library_id executes and returns results."""
         try:
             result = await context7_handler.execute(
-                "resolve_library_id",
-                {"libraryName": "react"}
+                "resolve_library_id", {"libraryName": "react"}
             )
 
             assert result["status"] == "success"
@@ -133,10 +132,7 @@ class TestContext7ToolExecution:
         try:
             result = await context7_handler.execute(
                 "get_library_docs",
-                {
-                    "context7CompatibleLibraryID": "/facebook/react",
-                    "topic": "hooks"
-                }
+                {"context7CompatibleLibraryID": "/facebook/react", "topic": "hooks"},
             )
 
             assert result["status"] == "success"
@@ -176,9 +172,9 @@ class TestContext7MCPIntegration:
             "method": "tools/call",
             "params": {
                 "name": "resolve-library-id",
-                "arguments": {"libraryName": "test"}
+                "arguments": {"libraryName": "test"},
             },
-            "id": 1
+            "id": 1,
         }
 
         # Should be valid JSON

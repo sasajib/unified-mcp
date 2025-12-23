@@ -35,12 +35,14 @@ try:
     from graphiti_core.llm_client.gemini_client import GeminiClient
     from graphiti_core.embedder.gemini import GeminiEmbedder, GeminiEmbedderConfig
     from graphiti_core.cross_encoder.gemini_reranker_client import GeminiRerankerClient
+
     HAS_GEMINI = True
 except ImportError:
     HAS_GEMINI = False
 
 try:
     from graphiti_core.llm_client.anthropic_client import AnthropicClient
+
     HAS_ANTHROPIC = True
 except ImportError:
     HAS_ANTHROPIC = False
@@ -199,18 +201,22 @@ class LadybugDriver(GraphDriver):
         # Create FTS indexes for full-text search using CALL syntax
         try:
             # Entity table FTS index
-            self.conn.execute("""
+            self.conn.execute(
+                """
                 CALL CREATE_FTS_INDEX('Entity', 'node_name_and_summary', ['name', 'summary'])
-            """)
+            """
+            )
         except Exception as e:
             # Index might already exist
             logging.debug(f"Entity FTS index creation: {e}")
 
         try:
             # Edge table FTS index
-            self.conn.execute("""
+            self.conn.execute(
+                """
                 CALL CREATE_FTS_INDEX('RelatesToNode_', 'edge_name_and_fact', ['name', 'fact'])
-            """)
+            """
+            )
         except Exception as e:
             # Index might already exist
             logging.debug(f"Edge FTS index creation: {e}")
@@ -236,8 +242,12 @@ class LadybugDriver(GraphDriver):
                 records.append(record_dict)
             return records, None, None
         except Exception as e:
-            params_preview = {k: (v[:5] if isinstance(v, list) else v) for k, v in params.items()}
-            logging.error(f"LadybugDB query error: {e}\n{cypher_query}\n{params_preview}")
+            params_preview = {
+                k: (v[:5] if isinstance(v, list) else v) for k, v in params.items()
+            }
+            logging.error(
+                f"LadybugDB query error: {e}\n{cypher_query}\n{params_preview}"
+            )
             raise
 
     def session(self, _database: str | None = None) -> GraphDriverSession:
@@ -287,9 +297,13 @@ class GraphitiHandler(CapabilityHandler):
         embedder_model = os.getenv("GRAPHITI_EMBEDDER_MODEL")
 
         # Debug logging
-        self.logger.info(f"Environment: GRAPHITI_LLM_PROVIDER={llm_provider}, GRAPHITI_EMBEDDER_PROVIDER={embedder_provider}")
+        self.logger.info(
+            f"Environment: GRAPHITI_LLM_PROVIDER={llm_provider}, GRAPHITI_EMBEDDER_PROVIDER={embedder_provider}"
+        )
         self.logger.info(f"Models: LLM={llm_model}, Embedder={embedder_model}")
-        self.logger.info(f"API Keys: GOOGLE_API_KEY={'set' if os.getenv('GOOGLE_API_KEY') else 'not set'}, OPENAI_API_KEY={'set' if os.getenv('OPENAI_API_KEY') else 'not set'}")
+        self.logger.info(
+            f"API Keys: GOOGLE_API_KEY={'set' if os.getenv('GOOGLE_API_KEY') else 'not set'}, OPENAI_API_KEY={'set' if os.getenv('OPENAI_API_KEY') else 'not set'}"
+        )
 
         # Create LLM client based on provider
         if llm_provider == "google_ai" or llm_provider == "google":
@@ -300,12 +314,11 @@ class GraphitiHandler(CapabilityHandler):
                 )
             api_key = os.getenv("GOOGLE_API_KEY")
             if not api_key:
-                raise RuntimeError("GOOGLE_API_KEY environment variable is required for Google AI")
+                raise RuntimeError(
+                    "GOOGLE_API_KEY environment variable is required for Google AI"
+                )
 
-            config = LLMConfig(
-                api_key=api_key,
-                model=llm_model or "gemini-2.5-flash"
-            )
+            config = LLMConfig(api_key=api_key, model=llm_model or "gemini-2.5-flash")
             llm_client = GeminiClient(config=config)
             self.logger.info(f"Using Gemini LLM: {llm_model or 'gemini-2.5-flash'}")
 
@@ -317,23 +330,25 @@ class GraphitiHandler(CapabilityHandler):
                 )
             api_key = os.getenv("ANTHROPIC_API_KEY")
             if not api_key:
-                raise RuntimeError("ANTHROPIC_API_KEY environment variable is required for Anthropic")
+                raise RuntimeError(
+                    "ANTHROPIC_API_KEY environment variable is required for Anthropic"
+                )
 
             llm_client = AnthropicClient(
-                api_key=api_key,
-                model=llm_model or "claude-3-5-sonnet-20241022"
+                api_key=api_key, model=llm_model or "claude-3-5-sonnet-20241022"
             )
-            self.logger.info(f"Using Anthropic LLM: {llm_model or 'claude-3-5-sonnet-20241022'}")
+            self.logger.info(
+                f"Using Anthropic LLM: {llm_model or 'claude-3-5-sonnet-20241022'}"
+            )
 
         elif llm_provider == "openai":
             api_key = os.getenv("OPENAI_API_KEY")
             if not api_key:
-                raise RuntimeError("OPENAI_API_KEY environment variable is required for OpenAI")
+                raise RuntimeError(
+                    "OPENAI_API_KEY environment variable is required for OpenAI"
+                )
 
-            llm_client = OpenAIClient(
-                api_key=api_key,
-                model=llm_model or "gpt-4o-mini"
-            )
+            llm_client = OpenAIClient(api_key=api_key, model=llm_model or "gpt-4o-mini")
             self.logger.info(f"Using OpenAI LLM: {llm_model or 'gpt-4o-mini'}")
 
         else:
@@ -348,25 +363,31 @@ class GraphitiHandler(CapabilityHandler):
                 )
             api_key = os.getenv("GOOGLE_API_KEY")
             if not api_key:
-                raise RuntimeError("GOOGLE_API_KEY environment variable is required for Google AI")
+                raise RuntimeError(
+                    "GOOGLE_API_KEY environment variable is required for Google AI"
+                )
 
             embedder_config = GeminiEmbedderConfig(
-                api_key=api_key,
-                embedding_model=embedder_model or "text-embedding-004"
+                api_key=api_key, embedding_model=embedder_model or "text-embedding-004"
             )
             embedder = GeminiEmbedder(config=embedder_config)
-            self.logger.info(f"Using Gemini embedder: {embedder_model or 'text-embedding-004'}")
+            self.logger.info(
+                f"Using Gemini embedder: {embedder_model or 'text-embedding-004'}"
+            )
 
         elif embedder_provider == "openai":
             api_key = os.getenv("OPENAI_API_KEY")
             if not api_key:
-                raise RuntimeError("OPENAI_API_KEY environment variable is required for OpenAI")
+                raise RuntimeError(
+                    "OPENAI_API_KEY environment variable is required for OpenAI"
+                )
 
             embedder = OpenAIEmbedder(
-                api_key=api_key,
-                model=embedder_model or "text-embedding-3-small"
+                api_key=api_key, model=embedder_model or "text-embedding-3-small"
             )
-            self.logger.info(f"Using OpenAI embedder: {embedder_model or 'text-embedding-3-small'}")
+            self.logger.info(
+                f"Using OpenAI embedder: {embedder_model or 'text-embedding-3-small'}"
+            )
 
         else:
             raise ValueError(f"Unsupported embedder provider: {embedder_provider}")
@@ -376,15 +397,18 @@ class GraphitiHandler(CapabilityHandler):
         if llm_provider == "google_ai" or llm_provider == "google":
             reranker_config = LLMConfig(
                 api_key=os.getenv("GOOGLE_API_KEY"),
-                model=os.getenv("GRAPHITI_RERANKER_MODEL") or "gemini-2.5-flash-lite"
+                model=os.getenv("GRAPHITI_RERANKER_MODEL") or "gemini-2.5-flash-lite",
             )
             cross_encoder = GeminiRerankerClient(config=reranker_config)
             self.logger.info(f"Using Gemini reranker: {reranker_config.model}")
         elif llm_provider == "openai":
             # For OpenAI, Graphiti will create default OpenAIRerankerClient if we pass None
             # But let's be explicit about it
-            from graphiti_core.cross_encoder.openai_reranker_client import OpenAIRerankerClient
+            from graphiti_core.cross_encoder.openai_reranker_client import (
+                OpenAIRerankerClient,
+            )
             from graphiti_core.cross_encoder.client import OpenAIRerankerConfig
+
             reranker_config = OpenAIRerankerConfig(api_key=os.getenv("OPENAI_API_KEY"))
             cross_encoder = OpenAIRerankerClient(config=reranker_config)
             self.logger.info("Using OpenAI reranker")
@@ -562,7 +586,7 @@ class GraphitiHandler(CapabilityHandler):
                 edges = results
                 nodes = []
                 episodes = []
-            elif hasattr(results, 'nodes'):
+            elif hasattr(results, "nodes"):
                 # Results is a SearchResults object
                 nodes = results.nodes
                 edges = results.edges
@@ -588,8 +612,16 @@ class GraphitiHandler(CapabilityHandler):
                     {
                         "uuid": edge.uuid,
                         "fact": edge.fact,
-                        "source": edge.source_node_uuid if hasattr(edge, 'source_node_uuid') else None,
-                        "target": edge.target_node_uuid if hasattr(edge, 'target_node_uuid') else None,
+                        "source": (
+                            edge.source_node_uuid
+                            if hasattr(edge, "source_node_uuid")
+                            else None
+                        ),
+                        "target": (
+                            edge.target_node_uuid
+                            if hasattr(edge, "target_node_uuid")
+                            else None
+                        ),
                     }
                     for edge in edges
                 ],

@@ -30,8 +30,12 @@ class CodannaHandler(CapabilityHandler):
         self.codanna_path: Optional[str] = None
         self.project_root: Path = Path.cwd()
         self.auto_index: bool = config.get("auto_index", True)  # Auto-index by default
-        self.watch_changes: bool = config.get("watch_changes", False)  # Watch disabled by default
-        self.index_dirs: List[str] = config.get("index_dirs", ["src", "lib", "."])  # Directories to index
+        self.watch_changes: bool = config.get(
+            "watch_changes", False
+        )  # Watch disabled by default
+        self.index_dirs: List[str] = config.get(
+            "index_dirs", ["src", "lib", "."]
+        )  # Directories to index
 
     async def initialize(self) -> None:
         """Initialize Codanna - verify installation and check index."""
@@ -48,7 +52,9 @@ class CodannaHandler(CapabilityHandler):
         index_path = self.project_root / ".codanna" / "index"
         if not index_path.exists():
             if self.auto_index:
-                self.logger.info(f"Codanna index not found at {index_path}. Auto-indexing...")
+                self.logger.info(
+                    f"Codanna index not found at {index_path}. Auto-indexing..."
+                )
                 await self._auto_index()
             else:
                 self.logger.warning(
@@ -76,10 +82,10 @@ class CodannaHandler(CapabilityHandler):
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
-            stdout, stderr = await init_proc.wait()
+            stdout, stderr = await init_proc.communicate()
 
             if init_proc.returncode != 0:
-                self.logger.error(f"codanna init failed: {stderr}")
+                self.logger.error(f"codanna init failed: {stderr.decode()}")
                 return
 
             # Find directories to index
@@ -105,12 +111,14 @@ class CodannaHandler(CapabilityHandler):
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
                 )
-                await index_proc.wait()
+                stdout, stderr = await index_proc.communicate()
 
                 if index_proc.returncode == 0:
                     self.logger.info(f"✓ Indexed {dir_name}")
                 else:
-                    self.logger.warning(f"Failed to index {dir_name}")
+                    self.logger.warning(
+                        f"Failed to index {dir_name}: {stderr.decode()}"
+                    )
 
             self.logger.info("✓ Auto-indexing completed")
 
@@ -134,18 +142,35 @@ class CodannaHandler(CapabilityHandler):
                         return
 
                     # Only reindex for code files
-                    if not any(event.src_path.endswith(ext) for ext in
-                              ['.py', '.js', '.ts', '.jsx', '.tsx', '.rs', '.go', '.java', '.cpp', '.c', '.h']):
+                    if not any(
+                        event.src_path.endswith(ext)
+                        for ext in [
+                            ".py",
+                            ".js",
+                            ".ts",
+                            ".jsx",
+                            ".tsx",
+                            ".rs",
+                            ".go",
+                            ".java",
+                            ".cpp",
+                            ".c",
+                            ".h",
+                        ]
+                    ):
                         return
 
                     # Debounce re-indexing
                     import time
+
                     now = time.time()
                     if now - self.last_reindex < self.reindex_delay:
                         return
 
                     self.last_reindex = now
-                    self.handler.logger.info(f"File changed: {event.src_path}. Re-indexing...")
+                    self.handler.logger.info(
+                        f"File changed: {event.src_path}. Re-indexing..."
+                    )
                     asyncio.create_task(self.handler._auto_index())
 
             event_handler = CodeChangeHandler(self)
@@ -221,7 +246,10 @@ class CodannaHandler(CapabilityHandler):
                             "description": "Symbol ID for unambiguous lookup (preferred over name)",
                         },
                     },
-                    "oneOf": [{"required": ["function_name"]}, {"required": ["symbol_id"]}],
+                    "oneOf": [
+                        {"required": ["function_name"]},
+                        {"required": ["symbol_id"]},
+                    ],
                 },
             },
             "find_symbol": {

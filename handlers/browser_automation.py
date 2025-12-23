@@ -268,11 +268,8 @@ class PlaywrightHandler(CapabilityHandler):
                 "params": {
                     "protocolVersion": "2024-11-05",
                     "capabilities": {},
-                    "clientInfo": {
-                        "name": "unified-mcp",
-                        "version": "1.0.0"
-                    }
-                }
+                    "clientInfo": {"name": "unified-mcp", "version": "1.0.0"},
+                },
             }
 
             init_json = json.dumps(initialize_request) + "\n"
@@ -284,7 +281,9 @@ class PlaywrightHandler(CapabilityHandler):
             init_response = json.loads(init_response_line.decode().strip())
 
             if "error" in init_response:
-                raise RuntimeError(f"Playwright MCP initialization error: {init_response['error']}")
+                raise RuntimeError(
+                    f"Playwright MCP initialization error: {init_response['error']}"
+                )
 
             self.logger.debug("Playwright MCP initialized successfully")
 
@@ -293,10 +292,7 @@ class PlaywrightHandler(CapabilityHandler):
                 "jsonrpc": "2.0",
                 "id": 2,
                 "method": "tools/call",
-                "params": {
-                    "name": tool_name,
-                    "arguments": params
-                }
+                "params": {"name": tool_name, "arguments": params},
             }
 
             tool_json = json.dumps(tool_request) + "\n"
@@ -310,7 +306,9 @@ class PlaywrightHandler(CapabilityHandler):
                 # Try to get any stderr output for debugging
                 stderr_output = ""
                 try:
-                    stderr_data = await asyncio.wait_for(process.stderr.read(), timeout=1.0)
+                    stderr_data = await asyncio.wait_for(
+                        process.stderr.read(), timeout=1.0
+                    )
                     stderr_output = stderr_data.decode("utf-8").strip()
                 except asyncio.TimeoutError:
                     pass

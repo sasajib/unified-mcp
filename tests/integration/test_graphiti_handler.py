@@ -25,6 +25,7 @@ from handlers.knowledge_graph import GraphitiHandler
 try:
     import real_ladybug as lb
     import graphiti_core
+
     GRAPHITI_AVAILABLE = True
 except ImportError:
     GRAPHITI_AVAILABLE = False
@@ -62,7 +63,9 @@ async def graphiti_handler(graphiti_config):
 class TestGraphitiHandlerInitialization:
     """Tests for handler initialization."""
 
-    @pytest.mark.skipif(not GRAPHITI_AVAILABLE, reason="Graphiti/LadybugDB not installed")
+    @pytest.mark.skipif(
+        not GRAPHITI_AVAILABLE, reason="Graphiti/LadybugDB not installed"
+    )
     @pytest.mark.skipif(not OPENAI_API_KEY_SET, reason="OpenAI API key not set")
     @pytest.mark.asyncio
     async def test_handler_initializes_successfully(self, graphiti_handler):
@@ -71,7 +74,9 @@ class TestGraphitiHandlerInitialization:
         assert graphiti_handler.db_path is not None
         assert Path(graphiti_handler.db_path).parent.exists()
 
-    @pytest.mark.skipif(GRAPHITI_AVAILABLE, reason="Test requires Graphiti NOT installed")
+    @pytest.mark.skipif(
+        GRAPHITI_AVAILABLE, reason="Test requires Graphiti NOT installed"
+    )
     @pytest.mark.asyncio
     async def test_handler_raises_if_graphiti_missing(self, graphiti_config):
         """Handler raises error if Graphiti not installed."""
@@ -155,13 +160,16 @@ class TestGraphitiToolExecution:
                 {
                     "content": "The unified-mcp project uses progressive discovery to reduce token usage.",
                     "source": "test case",
-                }
+                },
             )
 
             assert result["status"] == "success"
             assert result["tool"] == "store_insight"
             assert "message" in result
-            assert result["content"] == "The unified-mcp project uses progressive discovery to reduce token usage."
+            assert (
+                result["content"]
+                == "The unified-mcp project uses progressive discovery to reduce token usage."
+            )
 
         except Exception as e:
             # If Graphiti/OpenAI fails, skip test
@@ -182,7 +190,7 @@ class TestGraphitiToolExecution:
                     "name": "Test Episode",
                     "content": "This is a test conversation about implementing MCP servers.",
                     "source_description": "test conversation",
-                }
+                },
             )
 
             assert result["status"] == "success"
@@ -204,14 +212,12 @@ class TestGraphitiToolExecution:
         try:
             # First add some data
             await graphiti_handler.execute(
-                "store_insight",
-                {"content": "Python is a programming language"}
+                "store_insight", {"content": "Python is a programming language"}
             )
 
             # Then search
             result = await graphiti_handler.execute(
-                "search_insights",
-                {"query": "programming language", "limit": 5}
+                "search_insights", {"query": "programming language", "limit": 5}
             )
 
             assert result["status"] == "success"
@@ -235,8 +241,7 @@ class TestGraphitiToolExecution:
         try:
             # Simple query to list all nodes
             result = await graphiti_handler.execute(
-                "query_graph",
-                {"cypher_query": "MATCH (n) RETURN n LIMIT 10"}
+                "query_graph", {"cypher_query": "MATCH (n) RETURN n LIMIT 10"}
             )
 
             assert result["status"] == "success"
@@ -290,12 +295,14 @@ class TestLadybugDriver:
     def test_driver_imports_successfully(self):
         """LadybugDriver can be imported."""
         from handlers.knowledge_graph import LadybugDriver
+
         assert LadybugDriver is not None
 
     @pytest.mark.skipif(not GRAPHITI_AVAILABLE, reason="Graphiti not installed")
     def test_driver_session_imports_successfully(self):
         """LadybugDriverSession can be imported."""
         from handlers.knowledge_graph import LadybugDriverSession
+
         assert LadybugDriverSession is not None
 
     @pytest.mark.skipif(not GRAPHITI_AVAILABLE, reason="Graphiti not installed")

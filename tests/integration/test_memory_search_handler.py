@@ -111,7 +111,9 @@ class TestMemoryToolExecution:
         # Mock HTTP response
         mock_response = Mock()
         mock_response.status_code = 200
-        mock_response.json.return_value = {"observations": [{"id": 1, "content": "test"}]}
+        mock_response.json.return_value = {
+            "observations": [{"id": 1, "content": "test"}]
+        }
         mock_response.raise_for_status = Mock()
 
         # Mock httpx.AsyncClient
@@ -119,11 +121,10 @@ class TestMemoryToolExecution:
         mock_client.post = AsyncMock(return_value=mock_response)
         mock_client.get = AsyncMock(return_value=mock_response)
 
-        with patch('httpx.AsyncClient', return_value=mock_client):
+        with patch("httpx.AsyncClient", return_value=mock_client):
             await memory_handler.initialize()
             result = await memory_handler.execute(
-                "mem_search",
-                {"query": "test query", "limit": 5}
+                "mem_search", {"query": "test query", "limit": 5}
             )
 
             # Verify HTTP call
@@ -150,12 +151,9 @@ class TestMemoryToolExecution:
         mock_client = AsyncMock()
         mock_client.get = AsyncMock(return_value=mock_response)
 
-        with patch('httpx.AsyncClient', return_value=mock_client):
+        with patch("httpx.AsyncClient", return_value=mock_client):
             await memory_handler.initialize()
-            result = await memory_handler.execute(
-                "mem_get_observation",
-                {"id": 123}
-            )
+            result = await memory_handler.execute("mem_get_observation", {"id": 123})
 
             # Verify HTTP call - expect 2 calls (health check + actual API call)
             assert mock_client.get.call_count == 2
@@ -180,12 +178,9 @@ class TestMemoryToolExecution:
         mock_client = AsyncMock()
         mock_client.get = AsyncMock(return_value=mock_response)
 
-        with patch('httpx.AsyncClient', return_value=mock_client):
+        with patch("httpx.AsyncClient", return_value=mock_client):
             await memory_handler.initialize()
-            result = await memory_handler.execute(
-                "mem_recent_context",
-                {"limit": 20}
-            )
+            result = await memory_handler.execute("mem_recent_context", {"limit": 20})
 
             # Verify HTTP call - expect 2 calls (health check + actual API call)
             assert mock_client.get.call_count == 2
@@ -210,15 +205,11 @@ class TestMemoryToolExecution:
         mock_client = AsyncMock()
         mock_client.get = AsyncMock(return_value=mock_response)
 
-        with patch('httpx.AsyncClient', return_value=mock_client):
+        with patch("httpx.AsyncClient", return_value=mock_client):
             await memory_handler.initialize()
             result = await memory_handler.execute(
                 "mem_timeline",
-                {
-                    "limit": 50,
-                    "start_date": "2024-01-01",
-                    "end_date": "2024-12-31"
-                }
+                {"limit": 50, "start_date": "2024-01-01", "end_date": "2024-12-31"},
             )
 
             # Verify HTTP call - expect 2 calls (health check + actual API call)
@@ -270,6 +261,7 @@ class TestMemoryToolMapping:
     def test_search_maps_to_api_search(self):
         """mem_search maps to POST /api/search."""
         import inspect
+
         source = inspect.getsource(ClaudeMemHandler._search)
         assert "/api/search" in source
         assert "post" in source.lower()
@@ -277,6 +269,7 @@ class TestMemoryToolMapping:
     def test_get_observation_maps_to_api_observation(self):
         """mem_get_observation maps to GET /api/observation/:id."""
         import inspect
+
         source = inspect.getsource(ClaudeMemHandler._get_observation)
         assert "/api/observation" in source
         assert "get" in source.lower()
@@ -284,11 +277,13 @@ class TestMemoryToolMapping:
     def test_recent_context_maps_to_api_recent(self):
         """mem_recent_context maps to GET /api/recent."""
         import inspect
+
         source = inspect.getsource(ClaudeMemHandler._recent_context)
         assert "/api/recent" in source
 
     def test_timeline_maps_to_api_timeline(self):
         """mem_timeline maps to GET /api/timeline."""
         import inspect
+
         source = inspect.getsource(ClaudeMemHandler._timeline)
         assert "/api/timeline" in source

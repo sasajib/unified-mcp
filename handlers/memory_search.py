@@ -173,7 +173,7 @@ class ClaudeMemHandler(CapabilityHandler):
             # Claude-mem v8+ has reorganized endpoints
             response = await self.http_client.get(
                 f"{self.api_url}/api/context/recent",
-                params={"project": project, "limit": limit}
+                params={"project": project, "limit": limit},
             )
             response.raise_for_status()
             result = response.json()
@@ -226,8 +226,7 @@ class ClaudeMemHandler(CapabilityHandler):
 
         try:
             response = await self.http_client.get(
-                f"{self.api_url}/api/recent",
-                params={"limit": limit}
+                f"{self.api_url}/api/recent", params={"limit": limit}
             )
             response.raise_for_status()
             result = response.json()
@@ -261,8 +260,7 @@ class ClaudeMemHandler(CapabilityHandler):
 
         try:
             response = await self.http_client.get(
-                f"{self.api_url}/api/timeline",
-                params=params
+                f"{self.api_url}/api/timeline", params=params
             )
             response.raise_for_status()
             result = response.json()

@@ -142,8 +142,7 @@ class TestPlaywrightToolExecution:
         """playwright_navigate executes (may require browser installation)."""
         try:
             result = await playwright_handler.execute(
-                "playwright_navigate",
-                {"url": "https://example.com"}
+                "playwright_navigate", {"url": "https://example.com"}
             )
 
             assert result["status"] == "success"
@@ -163,8 +162,7 @@ class TestPlaywrightToolExecution:
         """playwright_evaluate executes simple JavaScript."""
         try:
             result = await playwright_handler.execute(
-                "playwright_evaluate",
-                {"function": "() => { return 1 + 1; }"}
+                "playwright_evaluate", {"function": "() => { return 1 + 1; }"}
             )
 
             assert result["status"] == "success"
@@ -205,9 +203,9 @@ class TestPlaywrightMCPIntegration:
             "method": "tools/call",
             "params": {
                 "name": "browser_navigate",
-                "arguments": {"url": "https://example.com"}
+                "arguments": {"url": "https://example.com"},
             },
-            "id": 1
+            "id": 1,
         }
 
         # Should be valid JSON

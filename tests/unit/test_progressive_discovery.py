@@ -63,11 +63,13 @@ class TestDescribeTools:
             "input_schema": {
                 "type": "object",
                 "properties": {"param": {"type": "string"}},
-                "required": ["param"]
-            }
+                "required": ["param"],
+            },
         }
 
-        with patch.object(registry, 'describe_tools', new=AsyncMock(return_value=[mock_schema])):
+        with patch.object(
+            registry, "describe_tools", new=AsyncMock(return_value=[mock_schema])
+        ):
             schemas = await describe_tools(registry, ["test_tool_1"])
 
         assert len(schemas) == 1
@@ -84,10 +86,12 @@ class TestDescribeTools:
         mock_schema = {
             "name": "test_tool_1",
             "description": "Test tool",
-            "input_schema": {"type": "object", "properties": {}}
+            "input_schema": {"type": "object", "properties": {}},
         }
 
-        with patch.object(registry, 'describe_tools', new=AsyncMock(return_value=[mock_schema])):
+        with patch.object(
+            registry, "describe_tools", new=AsyncMock(return_value=[mock_schema])
+        ):
             schemas = await describe_tools(registry, ["test_tool_1"])
 
         if schemas:

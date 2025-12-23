@@ -66,3 +66,7 @@ data/
 
 # Environment variables
 .env
+
+# Codanna cache
+.fastembed_cache
+.codannaignore

@@ -70,7 +70,9 @@ class TestCodannaHandlerInitialization:
 
     @pytest.mark.skipif(not CODANNA_AVAILABLE, reason="Codanna not installed")
     @pytest.mark.asyncio
-    async def test_handler_warns_if_no_index(self, codanna_handler, tmp_path, monkeypatch):
+    async def test_handler_warns_if_no_index(
+        self, codanna_handler, tmp_path, monkeypatch
+    ):
         """Handler warns if index doesn't exist in project."""
         # Change to temp directory with no index
         monkeypatch.chdir(tmp_path)
@@ -150,8 +152,7 @@ class TestCodannaToolExecution:
 
         try:
             result = await codanna_handler.execute(
-                "search_code",
-                {"query": "handler", "limit": 3}
+                "search_code", {"query": "handler", "limit": 3}
             )
 
             assert result["status"] == "success"
@@ -171,10 +172,7 @@ class TestCodannaToolExecution:
     async def test_find_symbol_execution(self, codanna_handler):
         """find_symbol executes and returns results."""
         try:
-            result = await codanna_handler.execute(
-                "find_symbol",
-                {"name": "main"}
-            )
+            result = await codanna_handler.execute("find_symbol", {"name": "main"})
 
             assert result["status"] == "success"
             assert result["tool"] == "find_symbol"
@@ -193,8 +191,7 @@ class TestCodannaToolExecution:
         """get_call_graph executes with function_name."""
         try:
             result = await codanna_handler.execute(
-                "get_call_graph",
-                {"function_name": "main"}
+                "get_call_graph", {"function_name": "main"}
             )
 
             assert result["status"] == "success"
@@ -216,7 +213,7 @@ class TestCodannaToolExecution:
         try:
             result = await codanna_handler.execute(
                 "find_implementations",
-                {"query": "Handler", "kind": "Struct", "limit": 5}
+                {"query": "Handler", "kind": "Struct", "limit": 5},
             )
 
             assert result["status"] == "success"
@@ -253,12 +250,9 @@ class TestCodannaCommandExecution:
         """_run_codanna_command correctly parses JSON output."""
         # Try to get index info (doesn't require indexed code)
         try:
-            result = await codanna_handler._run_codanna_command([
-                codanna_handler.codanna_path,
-                "mcp",
-                "get_index_info",
-                "--json"
-            ])
+            result = await codanna_handler._run_codanna_command(
+                [codanna_handler.codanna_path, "mcp", "get_index_info", "--json"]
+            )
 
             # Should return parsed dict
             assert isinstance(result, dict)
@@ -274,12 +268,9 @@ class TestCodannaCommandExecution:
     async def test_run_codanna_command_handles_errors(self, codanna_handler):
         """_run_codanna_command raises RuntimeError on command failure."""
         with pytest.raises(RuntimeError):
-            await codanna_handler._run_codanna_command([
-                codanna_handler.codanna_path,
-                "mcp",
-                "nonexistent_command",
-                "--json"
-            ])
+            await codanna_handler._run_codanna_command(
+                [codanna_handler.codanna_path, "mcp", "nonexistent_command", "--json"]
+            )
 
 
 class TestCodannaToolMapping:

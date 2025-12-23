@@ -81,13 +81,19 @@ class TestToolDiscovery:
         """list_tools returns minimal preview (search step)."""
         with patch.object(mcp_server.registry, "list_tools") as mock_list:
             mock_list.return_value = [
-                {"name": "search_code", "description": "Search codebase", "preview": True}
+                {
+                    "name": "search_code",
+                    "description": "Search codebase",
+                    "preview": True,
+                }
             ]
 
             tools = await mcp_server.list_tools()
 
             assert len(tools) > 0
-            assert any("search" in tool.get("description", "").lower() for tool in tools)
+            assert any(
+                "search" in tool.get("description", "").lower() for tool in tools
+            )
 
     @pytest.mark.asyncio
     async def test_describe_tool_returns_schema(self, mcp_server):
@@ -98,11 +104,9 @@ class TestToolDiscovery:
                 "description": "Search code semantically",
                 "input_schema": {
                     "type": "object",
-                    "properties": {
-                        "query": {"type": "string"}
-                    },
-                    "required": ["query"]
-                }
+                    "properties": {"query": {"type": "string"}},
+                    "required": ["query"],
+                },
             }
 
             schema = await mcp_server.describe_tool("search_code")
@@ -121,12 +125,11 @@ class TestToolExecution:
         with patch.object(mcp_server.registry, "execute_tool") as mock_exec:
             mock_exec.return_value = {
                 "status": "success",
-                "results": [{"file": "test.py", "line": 10}]
+                "results": [{"file": "test.py", "line": 10}],
             }
 
             result = await mcp_server.execute_tool(
-                "search_code",
-                {"query": "test function"}
+                "search_code", {"query": "test function"}
             )
 
             assert result["status"] == "success"
@@ -137,12 +140,11 @@ class TestToolExecution:
         with patch.object(mcp_server.registry, "execute_tool") as mock_exec:
             mock_exec.return_value = {
                 "status": "success",
-                "results": [{"library": "/facebook/react"}]
+                "results": [{"library": "/facebook/react"}],
             }
 
             result = await mcp_server.execute_tool(
-                "resolve_library_id",
-                {"libraryName": "react"}
+                "resolve_library_id", {"libraryName": "react"}
             )
 
             assert result["status"] == "success"
@@ -151,14 +153,10 @@ class TestToolExecution:
     async def test_execute_browser_automation_tool(self, mcp_server):
         """Execute browser automation tool (Playwright)."""
         with patch.object(mcp_server.registry, "execute_tool") as mock_exec:
-            mock_exec.return_value = {
-                "status": "success",
-                "url": "https://example.com"
-            }
+            mock_exec.return_value = {"status": "success", "url": "https://example.com"}
 
             result = await mcp_server.execute_tool(
-                "playwright_navigate",
-                {"url": "https://example.com"}
+                "playwright_navigate", {"url": "https://example.com"}
             )
 
             assert result["status"] == "success"
@@ -169,12 +167,11 @@ class TestToolExecution:
         with patch.object(mcp_server.registry, "execute_tool") as mock_exec:
             mock_exec.return_value = {
                 "status": "success",
-                "results": [{"observation": "test"}]
+                "results": [{"observation": "test"}],
             }
 
             result = await mcp_server.execute_tool(
-                "mem_search",
-                {"query": "test query"}
+                "mem_search", {"query": "test query"}
             )
 
             assert result["status"] == "success"
@@ -183,14 +180,10 @@ class TestToolExecution:
     async def test_execute_knowledge_graph_tool(self, mcp_server):
         """Execute knowledge graph tool (Graphiti)."""
         with patch.object(mcp_server.registry, "execute_tool") as mock_exec:
-            mock_exec.return_value = {
-                "status": "success",
-                "message": "Insight stored"
-            }
+            mock_exec.return_value = {"status": "success", "message": "Insight stored"}
 
             result = await mcp_server.execute_tool(
-                "store_insight",
-                {"content": "test insight"}
+                "store_insight", {"content": "test insight"}
             )
 
             assert result["status"] == "success"
@@ -221,15 +214,9 @@ class TestErrorHandling:
     async def test_tool_execution_failure_returns_error(self, mcp_server):
         """Tool execution failure returns error status."""
         with patch.object(mcp_server.registry, "execute_tool") as mock_exec:
-            mock_exec.return_value = {
-                "status": "error",
-                "message": "Execution failed"
-            }
+            mock_exec.return_value = {"status": "error", "message": "Execution failed"}
 
-            result = await mcp_server.execute_tool(
-                "search_code",
-                {"query": "test"}
-            )
+            result = await mcp_server.execute_tool("search_code", {"query": "test"})
 
             assert result["status"] == "error"
 
@@ -252,7 +239,7 @@ class TestProgressiveDiscovery:
         with patch.object(mcp_server.registry, "get_tool_schema") as mock_schema:
             mock_schema.return_value = {
                 "name": "search_code",
-                "input_schema": {"properties": {"query": {"type": "string"}}}
+                "input_schema": {"properties": {"query": {"type": "string"}}},
             }
             schema = await mcp_server.describe_tool("search_code")
             assert "input_schema" in schema
@@ -270,7 +257,7 @@ class TestProgressiveDiscovery:
             mock_estimate.return_value = {
                 "search_only": 50,
                 "describe_only": 200,
-                "total_reduction": "96x"
+                "total_reduction": "96x",
             }
 
             estimates = await mcp_server.estimate_tokens("search_code")

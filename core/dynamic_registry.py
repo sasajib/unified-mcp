@@ -167,9 +167,7 @@ class DynamicToolRegistry:
         self.config: Dict[str, Any] = {}
 
         self._load_catalog()
-        logger.info(
-            f"Registry initialized with {len(self.capabilities)} capabilities"
-        )
+        logger.info(f"Registry initialized with {len(self.capabilities)} capabilities")
 
     def _load_catalog(self) -> None:
         """Load capability catalog from YAML file."""
