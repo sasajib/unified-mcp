@@ -4,7 +4,7 @@ version = "1.0.0"
 description = "Unified dynamic MCP server with progressive discovery for code understanding, documentation, browser automation, and memory"
 readme = "README.md"
 requires-python = ">=3.12"
-license = {text = "Apache-2.0"}
+license = "Apache-2.0"
 authors = [
     {name = "Your Name", email = "your.email@example.com"}
 ]
@@ -32,6 +32,10 @@ test = [
 [build-system]
 requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["core*", "handlers*", "config*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
