@@ -24,6 +24,7 @@ from pathlib import Path
 
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
+from mcp.types import Tool
 
 from core import DynamicToolRegistry
 
@@ -50,15 +51,15 @@ logger.info(f"Unified MCP Server initialized with {len(registry.capabilities)} c
 
 
 @app.list_tools()
-async def list_tools() -> list:
+async def list_tools() -> list[Tool]:
     """List all available tools for MCP protocol."""
     logger.info("list_tools (MCP protocol) called")
 
     return [
-        {
-            "name": "search_tools",
-            "description": "Search for relevant tools using natural language query. Returns lightweight previews (~50 tokens for 10 tools).",
-            "inputSchema": {
+        Tool(
+            name="search_tools",
+            description="Search for relevant tools using natural language query. Returns lightweight previews (~50 tokens for 10 tools).",
+            inputSchema={
                 "type": "object",
                 "properties": {
                     "query": {
@@ -73,11 +74,11 @@ async def list_tools() -> list:
                 },
                 "required": ["query"]
             }
-        },
-        {
-            "name": "describe_tools",
-            "description": "Get full schemas for specific tools. Returns detailed schemas (~200 tokens per tool).",
-            "inputSchema": {
+        ),
+        Tool(
+            name="describe_tools",
+            description="Get full schemas for specific tools. Returns detailed schemas (~200 tokens per tool).",
+            inputSchema={
                 "type": "object",
                 "properties": {
                     "tool_names": {
@@ -88,11 +89,11 @@ async def list_tools() -> list:
                 },
                 "required": ["tool_names"]
             }
-        },
-        {
-            "name": "execute_tool",
-            "description": "Execute a specific tool with given arguments.",
-            "inputSchema": {
+        ),
+        Tool(
+            name="execute_tool",
+            description="Execute a specific tool with given arguments.",
+            inputSchema={
                 "type": "object",
                 "properties": {
                     "tool_name": {
@@ -106,19 +107,19 @@ async def list_tools() -> list:
                 },
                 "required": ["tool_name", "arguments"]
             }
-        },
-        {
-            "name": "list_capabilities",
-            "description": "List all available capabilities and their status.",
-            "inputSchema": {
+        ),
+        Tool(
+            name="list_capabilities",
+            description="List all available capabilities and their status.",
+            inputSchema={
                 "type": "object",
                 "properties": {}
             }
-        },
-        {
-            "name": "enable_capability",
-            "description": "Dynamically enable a capability at runtime.",
-            "inputSchema": {
+        ),
+        Tool(
+            name="enable_capability",
+            description="Dynamically enable a capability at runtime.",
+            inputSchema={
                 "type": "object",
                 "properties": {
                     "capability_name": {
@@ -128,11 +129,11 @@ async def list_tools() -> list:
                 },
                 "required": ["capability_name"]
             }
-        },
-        {
-            "name": "disable_capability",
-            "description": "Dynamically disable a capability at runtime.",
-            "inputSchema": {
+        ),
+        Tool(
+            name="disable_capability",
+            description="Dynamically disable a capability at runtime.",
+            inputSchema={
                 "type": "object",
                 "properties": {
                     "capability_name": {
@@ -142,15 +143,15 @@ async def list_tools() -> list:
                 },
                 "required": ["capability_name"]
             }
-        },
-        {
-            "name": "get_server_info",
-            "description": "Get information about the unified MCP server.",
-            "inputSchema": {
+        ),
+        Tool(
+            name="get_server_info",
+            description="Get information about the unified MCP server.",
+            inputSchema={
                 "type": "object",
                 "properties": {}
             }
-        }
+        )
     ]
 
 
