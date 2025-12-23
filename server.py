@@ -29,6 +29,15 @@ from mcp.types import Tool
 
 from core import DynamicToolRegistry
 
+# Load .env file if it exists
+try:
+    from dotenv import load_dotenv
+    env_path = Path(__file__).parent / ".env"
+    if env_path.exists():
+        load_dotenv(env_path)
+except ImportError:
+    pass  # dotenv not installed, skip
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,

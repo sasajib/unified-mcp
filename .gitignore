@@ -57,3 +57,6 @@ capabilities/*/node_modules/
 capabilities/*/build/
 capabilities/*/dist/
 .auto-claude/
+
+# Environment variables
+.env
