@@ -57,6 +57,12 @@ capabilities/*/node_modules/
 capabilities/*/build/
 capabilities/*/dist/
 .auto-claude/
+data/
+.graphiti/
+.codanna/
+*.png
+*.jpg
+*.jpeg
 
 # Environment variables
 .env
