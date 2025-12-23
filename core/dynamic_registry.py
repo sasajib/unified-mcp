@@ -66,27 +66,41 @@ class ToolCapability:
         logger.info(f"Loading capability: {self.name} (type: {self.type})")
 
         try:
+            # Build config dict for handler
+            config = {
+                "name": self.name,
+                "type": self.type,
+                "source": str(self.source),
+                "enabled": self.enabled,
+                "tools": self.tools,
+                "description": self.description,
+            }
+
+            # Add api_url if present
+            if self.api_url:
+                config["api_url"] = self.api_url
+
             # Import handler based on type
             if self.type == "codanna":
                 from handlers.code_understanding import CodannaHandler
 
-                self._handler = CodannaHandler(self.source)
+                self._handler = CodannaHandler(config)
             elif self.type == "context7":
                 from handlers.documentation import Context7Handler
 
-                self._handler = Context7Handler(self.source)
+                self._handler = Context7Handler(config)
             elif self.type == "playwright":
                 from handlers.browser_automation import PlaywrightHandler
 
-                self._handler = PlaywrightHandler(self.source)
+                self._handler = PlaywrightHandler(config)
             elif self.type == "claude-mem":
                 from handlers.memory_search import ClaudeMemHandler
 
-                self._handler = ClaudeMemHandler(self.source, self.api_url)
+                self._handler = ClaudeMemHandler(config)
             elif self.type == "graphiti_ladybug":
                 from handlers.knowledge_graph import GraphitiHandler
 
-                self._handler = GraphitiHandler(self.source)
+                self._handler = GraphitiHandler(config)
             else:
                 raise ValueError(f"Unknown capability type: {self.type}")
 

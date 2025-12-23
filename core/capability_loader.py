@@ -24,20 +24,28 @@ class CapabilityHandler(ABC):
     this interface to provide a unified async API for tool execution.
 
     Pattern:
-    1. Initialize handler with source path
+    1. Initialize handler with config dict
     2. Call initialize() to set up dependencies
     3. Use get_tool_schema() to get tool definitions
     4. Use execute() to run tools
     """
 
-    def __init__(self, source_path: Path):
+    def __init__(self, config: dict):
         """
         Initialize handler.
 
         Args:
-            source_path: Path to capability source (git submodule, etc.)
+            config: Configuration dict with keys:
+                - name: Capability name
+                - type: Capability type
+                - source: Path to capability source
+                - enabled: Whether capability is enabled
+                - tools: List of tool names
+                - description: Capability description
+                - api_url: Optional API URL (for HTTP-based capabilities)
         """
-        self.source_path = source_path
+        self.config = config
+        self.source_path = Path(config.get("source", "."))
         self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
 
     @abstractmethod
