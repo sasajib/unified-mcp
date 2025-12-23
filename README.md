@@ -24,12 +24,18 @@ cd unified-mcp
 # 2. Install dependencies (using uv - recommended)
 uv pip install -r requirements.txt
 
-# 3. Add to Claude Code (replace /path/to/unified-mcp with actual path)
+# 3. Install Claude-mem plugin (required for memory capability)
+# In Claude Code terminal:
+/plugin marketplace add thedotmack/claude-mem
+/plugin install claude-mem
+# Then restart Claude Code
+
+# 4. Add to Claude Code (replace /path/to/unified-mcp with actual path)
 claude mcp add --transport stdio \
   unified-mcp \
   -- uv --directory /absolute/path/to/unified-mcp run server.py
 
-# 4. For Graphiti + Google Gemini support (optional)
+# 5. For Graphiti + Google Gemini support (optional)
 claude mcp add --transport stdio unified-mcp \
   -e GRAPHITI_ENABLED=true \
   -e GRAPHITI_LLM_PROVIDER=google_ai \
@@ -39,7 +45,7 @@ claude mcp add --transport stdio unified-mcp \
   -e GRAPHITI_EMBEDDER_MODEL=text-embedding-004 \
   -- uv --directory /absolute/path/to/unified-mcp run server.py
 
-# 5. Restart Claude Code and verify
+# 6. Restart Claude Code and verify
 # Ask Claude: "What tools do you have available?"
 ```
 
@@ -84,6 +90,52 @@ Unified MCP Server
 - **Python 3.12+** (for LadybugDB)
 - **Rust/Cargo** (for Codanna) - [Install Rust](https://rustup.rs/)
 - **Node.js 18+** (for Context7/Playwright) - [Install Node](https://nodejs.org/)
+- **Claude Code** (for Claude-mem plugin) - [Install Claude Code](https://claude.ai/download)
+
+### Claude-Mem Setup (Memory Capability)
+
+**Important:** Claude-mem is a separate MCP server that runs as a Claude Code plugin. It must be installed before the unified-mcp memory capability will work.
+
+**Installation Steps:**
+
+1. **Install via Claude Code Plugin Marketplace:**
+   ```bash
+   # In Claude Code terminal
+   /plugin marketplace add thedotmack/claude-mem
+   /plugin install claude-mem
+   ```
+
+2. **Restart Claude Code** - The plugin auto-starts the HTTP API on `http://localhost:37777`
+
+3. **Verify Installation:**
+   ```bash
+   # Check the service is running
+   curl http://localhost:37777
+
+   # Or visit the web UI
+   open http://localhost:37777
+   ```
+
+4. **Troubleshooting:**
+   ```bash
+   # Use the built-in troubleshooting skill
+   /claude-mem:troubleshoot
+   ```
+
+**What Gets Installed:**
+- HTTP API service on port 37777 (auto-managed by Bun)
+- SQLite database at `~/.claude-mem/claude-mem.db`
+- Web UI for browsing stored memories
+- 5 lifecycle hooks for automatic memory capture
+- Vector search via Chroma for semantic queries
+
+**Architecture:**
+- The unified-mcp server connects to claude-mem's HTTP API
+- No direct npm installation needed - plugin handles all dependencies
+- Auto-starts when Claude Code is running
+- Stores observations across sessions with semantic search
+
+For more details, see the [claude-mem documentation](https://github.com/thedotmack/claude-mem).
 
 ### Install Dependencies
 
@@ -94,11 +146,11 @@ pip install -r requirements.txt
 # Codanna (code understanding)
 cargo install codanna --all-features
 
-# Git submodules (Phase 2+)
+# Git submodules (for Context7 and Playwright only - claude-mem is a plugin)
 git submodule update --init --recursive
 cd capabilities/context7 && npm install
 cd ../playwright-mcp && npm install
-cd ../claude-mem && npm install
+# Note: claude-mem is installed as a Claude Code plugin (see above), not via npm
 ```
 
 **Codanna Auto-Indexing:**
