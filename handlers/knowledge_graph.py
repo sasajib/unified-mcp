@@ -16,6 +16,7 @@ LadybugDB provides embedded graph database (no Docker required).
 import asyncio
 import json
 import logging
+import os
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -23,10 +24,25 @@ from typing import Any, Dict, List, Optional
 from graphiti_core import Graphiti
 from graphiti_core.driver.driver import GraphDriver, GraphDriverSession, GraphProvider
 from graphiti_core.llm_client import OpenAIClient
+from graphiti_core.llm_client.config import LLMConfig
 from graphiti_core.embedder import OpenAIEmbedder
 from graphiti_core.nodes import EpisodeType
 
 from core.capability_loader import CapabilityHandler
+
+# Optional imports for alternative providers
+try:
+    from graphiti_core.llm_client.gemini_client import GeminiClient
+    from graphiti_core.embedder.gemini import GeminiEmbedder, GeminiEmbedderConfig
+    HAS_GEMINI = True
+except ImportError:
+    HAS_GEMINI = False
+
+try:
+    from graphiti_core.llm_client.anthropic_client import AnthropicClient
+    HAS_ANTHROPIC = True
+except ImportError:
+    HAS_ANTHROPIC = False
 
 # LadybugDB imports
 try:
@@ -210,7 +226,7 @@ class GraphitiHandler(CapabilityHandler):
         self.graphiti: Optional[Graphiti] = None
 
     async def initialize(self) -> None:
-        """Initialize Graphiti with LadybugDB."""
+        """Initialize Graphiti with LadybugDB and configured providers."""
         # Get database path from config (default to ~/.unified-mcp/graphiti)
         source = self.config.get("source", "capabilities/graphiti_ladybug")
         self.db_path = str(Path(source) / "data" / "graphiti.db")
@@ -223,15 +239,103 @@ class GraphitiHandler(CapabilityHandler):
         # Create LadybugDB driver
         driver = LadybugDriver(db_path=self.db_path)
 
-        # Initialize Graphiti with LadybugDB
-        # Note: Requires OpenAI API key in environment
+        # Get provider configuration from environment
+        llm_provider = os.getenv("GRAPHITI_LLM_PROVIDER", "openai").lower()
+        embedder_provider = os.getenv("GRAPHITI_EMBEDDER_PROVIDER", "openai").lower()
+        llm_model = os.getenv("GRAPHITI_LLM_MODEL")
+        embedder_model = os.getenv("GRAPHITI_EMBEDDER_MODEL")
+
+        # Create LLM client based on provider
+        if llm_provider == "google_ai" or llm_provider == "google":
+            if not HAS_GEMINI:
+                raise RuntimeError(
+                    "Gemini provider requested but not available. "
+                    "This should not happen as Gemini is included in graphiti-core"
+                )
+            api_key = os.getenv("GOOGLE_API_KEY")
+            if not api_key:
+                raise RuntimeError("GOOGLE_API_KEY environment variable is required for Google AI")
+
+            config = LLMConfig(
+                api_key=api_key,
+                model=llm_model or "gemini-1.5-flash-latest"
+            )
+            llm_client = GeminiClient(config=config)
+            self.logger.info(f"Using Gemini LLM: {llm_model or 'gemini-1.5-flash-latest'}")
+
+        elif llm_provider == "anthropic":
+            if not HAS_ANTHROPIC:
+                raise RuntimeError(
+                    "Anthropic provider requested but not available. "
+                    "Install with: pip install graphiti-core[anthropic]"
+                )
+            api_key = os.getenv("ANTHROPIC_API_KEY")
+            if not api_key:
+                raise RuntimeError("ANTHROPIC_API_KEY environment variable is required for Anthropic")
+
+            llm_client = AnthropicClient(
+                api_key=api_key,
+                model=llm_model or "claude-3-5-sonnet-20241022"
+            )
+            self.logger.info(f"Using Anthropic LLM: {llm_model or 'claude-3-5-sonnet-20241022'}")
+
+        elif llm_provider == "openai":
+            api_key = os.getenv("OPENAI_API_KEY")
+            if not api_key:
+                raise RuntimeError("OPENAI_API_KEY environment variable is required for OpenAI")
+
+            llm_client = OpenAIClient(
+                api_key=api_key,
+                model=llm_model or "gpt-4o-mini"
+            )
+            self.logger.info(f"Using OpenAI LLM: {llm_model or 'gpt-4o-mini'}")
+
+        else:
+            raise ValueError(f"Unsupported LLM provider: {llm_provider}")
+
+        # Create embedder based on provider
+        if embedder_provider == "google_ai" or embedder_provider == "google":
+            if not HAS_GEMINI:
+                raise RuntimeError(
+                    "Gemini embedder requested but not available. "
+                    "This should not happen as Gemini is included in graphiti-core"
+                )
+            api_key = os.getenv("GOOGLE_API_KEY")
+            if not api_key:
+                raise RuntimeError("GOOGLE_API_KEY environment variable is required for Google AI")
+
+            embedder_config = GeminiEmbedderConfig(
+                api_key=api_key,
+                embedding_model=embedder_model or "text-embedding-004"
+            )
+            embedder = GeminiEmbedder(config=embedder_config)
+            self.logger.info(f"Using Gemini embedder: {embedder_model or 'text-embedding-004'}")
+
+        elif embedder_provider == "openai":
+            api_key = os.getenv("OPENAI_API_KEY")
+            if not api_key:
+                raise RuntimeError("OPENAI_API_KEY environment variable is required for OpenAI")
+
+            embedder = OpenAIEmbedder(
+                api_key=api_key,
+                model=embedder_model or "text-embedding-3-small"
+            )
+            self.logger.info(f"Using OpenAI embedder: {embedder_model or 'text-embedding-3-small'}")
+
+        else:
+            raise ValueError(f"Unsupported embedder provider: {embedder_provider}")
+
+        # Initialize Graphiti with configured providers
         self.graphiti = Graphiti(
             graph_driver=driver,
-            llm_client=OpenAIClient(),
-            embedder=OpenAIEmbedder(),
+            llm_client=llm_client,
+            embedder=embedder,
         )
 
-        self.logger.info("Graphiti + LadybugDB initialized successfully")
+        self.logger.info(
+            f"Graphiti + LadybugDB initialized successfully "
+            f"(LLM: {llm_provider}, Embedder: {embedder_provider})"
+        )
 
     async def get_tool_schema(self, tool_name: str) -> dict:
         """Get JSON schema for a tool."""
