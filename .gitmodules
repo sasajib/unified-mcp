@@ -1,0 +1,3 @@
+[submodule "capabilities/codanna"]
+	path = capabilities/codanna
+	url = https://github.com/bartolli/codanna.git
