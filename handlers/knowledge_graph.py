@@ -245,6 +245,11 @@ class GraphitiHandler(CapabilityHandler):
         llm_model = os.getenv("GRAPHITI_LLM_MODEL")
         embedder_model = os.getenv("GRAPHITI_EMBEDDER_MODEL")
 
+        # Debug logging
+        self.logger.info(f"Environment: GRAPHITI_LLM_PROVIDER={llm_provider}, GRAPHITI_EMBEDDER_PROVIDER={embedder_provider}")
+        self.logger.info(f"Models: LLM={llm_model}, Embedder={embedder_model}")
+        self.logger.info(f"API Keys: GOOGLE_API_KEY={'set' if os.getenv('GOOGLE_API_KEY') else 'not set'}, OPENAI_API_KEY={'set' if os.getenv('OPENAI_API_KEY') else 'not set'}")
+
         # Create LLM client based on provider
         if llm_provider == "google_ai" or llm_provider == "google":
             if not HAS_GEMINI:
