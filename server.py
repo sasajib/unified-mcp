@@ -277,7 +277,7 @@ async def execute_tool(tool_name: str, arguments: dict) -> dict:
 
 
 @app.call_tool()
-async def list_capabilities() -> dict:
+async def list_capabilities(arguments: dict) -> dict:
     """
     List all available capabilities and their status.
 
@@ -360,7 +360,7 @@ async def disable_capability(capability_name: str) -> dict:
 
 
 @app.call_tool()
-async def get_server_info() -> dict:
+async def get_server_info(arguments: dict) -> dict:
     """
     Get information about the unified MCP server.
 
