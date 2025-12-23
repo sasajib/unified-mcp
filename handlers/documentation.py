@@ -268,7 +268,7 @@ class Context7Handler(CapabilityHandler):
                 "Install Node.js 18+ from https://nodejs.org/"
             )
         except json.JSONDecodeError as e:
-            self.logger.error(f"Invalid JSON from Context7 MCP")
+            self.logger.error("Invalid JSON from Context7 MCP")
             raise RuntimeError(f"Invalid JSON from Context7 MCP: {e}")
         except Exception as e:
             self.logger.error(f"Error calling Context7 MCP: {e}")
